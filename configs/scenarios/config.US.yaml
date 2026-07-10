@@ -63,7 +63,7 @@ co2:
       2050: 0.1
 
   powerplants_filter: (DateOut >= 2024 or DateOut != DateOut) and (DateIn <= 2025 or DateIn != DateIn)
-  custom_powerplants: false #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
+  custom_powerplants: replace #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
 # Costs Configuration
 costs:
