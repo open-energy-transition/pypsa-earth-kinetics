@@ -23,7 +23,7 @@ enable:
 run:
   name: "US" # use this to keep track of runs with different settings
   sector_name: "US" # use this to keep track of sector scenario runs
-  shared_cutouts: false # set to true to share the default cutout(s) across runs
+  shared_cutouts: true # set to true to share the default cutout(s) across runs
   # Note: value false requires build_cutout to be enabled
   allow_scenario_failure: false # If True, the workflow will continue even if a scenario in run_scenario fails
 
