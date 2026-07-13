@@ -32,7 +32,7 @@ scenario:
   simpl: [""]
   ll: ["v1"]
   clusters: [20]
-  opts: [Co2L-3h]
+  opts: [Co2L-1h]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2023
   sopts:
@@ -103,7 +103,7 @@ lines:
 
 # Costs Configuration
 costs:
-  year: 2020 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020
+  year: 2025 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020
   technology_data_version: v0.15.0
   discountrate: [0.071] #, 0.086, 0.111]
   country_specific_data: "" # (optional) Reference to the desired technology-data directory for techno-economic input data; Only "" and "US" supported, for other values check the technology-data output directory
