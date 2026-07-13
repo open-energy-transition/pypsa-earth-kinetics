@@ -31,7 +31,7 @@ run:
 scenario:
   simpl: [""]
   ll: ["v1"]
-  clusters: [10]
+  clusters: [20]
   opts: [Co2L-3h]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2023
@@ -71,7 +71,7 @@ electricity:
 
   # To be checked
   powerplants_filter: (DateOut >= 2022 or DateOut != DateOut) and (DateIn <= 2023 or DateIn != DateIn)
-  custom_powerplants: false #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
+  custom_powerplants: replace #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
   conventional_carriers: [nuclear, oil, OCGT, CCGT, coal, lignite, geothermal, biomass]
   renewable_carriers: [solar, onwind, offwind-ac, offwind-dc, hydro]
@@ -103,7 +103,7 @@ lines:
 
 # Costs Configuration
 costs:
-  year: 2025 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020
+  year: 2020 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020
   technology_data_version: v0.15.0
   discountrate: [0.071] #, 0.086, 0.111]
   country_specific_data: "" # (optional) Reference to the desired technology-data directory for techno-economic input data; Only "" and "US" supported, for other values check the technology-data output directory
@@ -138,7 +138,7 @@ costs:
   # investment: # EUR/MW
   #   CCGT: 830000
   # FOM: # %/year
-  #   CCGT: 3.35
+  #   nuclear: 10
   # VOM: # EUR/MWh
   #   CCGT: 4.2
   # fuel: # EUR/MWh
