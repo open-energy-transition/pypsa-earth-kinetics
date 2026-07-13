@@ -33,11 +33,20 @@ scenario:
   clusters: [100]
   opts: [Co2L-3h]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
-  - 2025
+  - 2023
   sopts:
   - "144h"
   demand:
   - "AB"
+
+electricity:
+  extendable_carriers:
+      # Note: For landlocked countries (e.g., Jordan, Austria, Switzerland), remove 'offwind-ac' and 'offwind-dc'
+          # from the Generator list below, as these offshore wind technologies require coastline access.
+    Generator: []
+    StorageUnit: [] # battery, H2
+    Store: []
+    Link: [] # H2 pipeline
 
 co2:
   limit: 1.640e+9    # annual cap [tCO2/year]; base * 1.1 for calibration purposes
@@ -99,7 +108,3 @@ costs:
   lifetime:
     CCGT: 45
     OCGT: 45
-
-  solver:
-    name: highs
-    options: highs-default
