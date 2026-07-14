@@ -15,13 +15,13 @@
 13,Shin Narihagawa,Hydro,Pumped Storage,Storage,JP,303,,,,,,1958,1958,2058,34.8228,133.4019,{nan},"{'GEM': {'G100000602331'}, 'GPD': {'WRI1000717'}, 'GEO': {'GEO-45120'}}",428
 14,Shin Nagoya,CCGT,CCGT,PP,JP,3058,0.560928711576194,,,,,1998,1998,2038,35.066262,136.879403,"{nan, nan, nan, nan, nan, nan, nan, nan, nan, nan}","{'GEM': {'G100000404072', 'G100000404068', 'G100000404066', 'G100000404063', 'G100000404070', 'G100000404064', 'G100000404071', 'G100000404069', 'G100000404067', 'G100000404065'}, 'GPD': {'WRI1000639'}, 'GEO': {'GEO-5377', 'GEO-5374'}}",397
 15,Shimogo,Hydro,Pumped Storage,Storage,JP,1000,,,,,,1988,1988,2088,37.3451,139.9083,{nan},"{'GEM': {'G100000602329'}, 'GPD': {'WRI1000724'}, 'GEO': {'GEO-45073'}}",892
-16,Shimane 2,Nuclear,Steam Turbine,PP,JP,820,,,,,,1989,1989,2039,35.5383,132.9992,{nan},"{'GEM': {'G100000500365'}, 'GPD': {'WRI1000685'}, 'GEO': {'GEO-5373'}}",1093
+16,Shimane 2,Nuclear,Steam Turbine,PP,JP,820,,,,,,2024,1989,2039,35.5383,132.9992,{nan},"{'GEM': {'G100000500365'}, 'GPD': {'WRI1000685'}, 'GEO': {'GEO-5373'}}",1093
 17,Shika 2,Nuclear,Steam Turbine,PP,JP,1206,,,,,,2006,2006,2011,37.0609,136.7265,{nan},"{'GEM': {'G100000500035'}, 'GPD': {'WRI1000681'}, 'GEO': {'GEO-5372'}}",928
 18,Sendai 1,Nuclear,Steam Turbine,PP,JP,890,,,,,,1984,1984,2034,31.8335,130.1887,{nan},"{'GEM': {'G100000500329'}, 'GPD': {'WRI1000688'}, 'GEO': {'GEO-5329'}}",1268
 19,Sakuma,Hydro,Reservoir,PP,JP,350,,,,,,1956,1956,2056,35.0916,137.8071,{nan},"{'GEM': {'G100000602326'}, 'GPD': {'WRI1000730'}, 'GEO': {'GEO-45088'}}",733
 20,Reihoku,Hard Coal,Steam Turbine,PP,JP,1400,,,,,,1995,1995,2040,32.485132,130.042115,"{nan, nan}","{'GEM': {'G100000108525', 'G100000108524'}, 'GPD': {'WRI1000666'}, 'GEO': {'GEO-44418'}}",1266
 21,Otori,Hydro,Reservoir,PP,JP,182,,,,,,1963,1999,2099,37.2163,139.2136,{nan},"{'GEM': {'G100000602323'}, 'GPD': {'WRI1000735'}, 'GEO': {'GEO-45075'}}",413
-22,Onagawa 2,Nuclear,Steam Turbine,PP,JP,825,,,,,,1995,1995,2045,38.3987,141.5003,{nan},"{'GEM': {'G100000500363'}, 'GPD': {'WRI1000676'}, 'GEO': {'GEO-4616'}}",890
+22,Onagawa 2,Nuclear,Steam Turbine,PP,JP,825,,,,,,2024,1995,2045,38.3987,141.5003,{nan},"{'GEM': {'G100000500363'}, 'GPD': {'WRI1000676'}, 'GEO': {'GEO-4616'}}",890
 23,Omarugawa,Hydro,Pumped Storage,Storage,JP,1200,,,,,,2007,2007,2107,32.242,131.3913,{nan},"{'GEM': {'G100000602322'}, 'GPD': {'WRI1000719'}, 'GEO': {'GEO-45067'}}",392
 24,Okuyoshino,Hydro,Reservoir,Storage,JP,1206,,,,,,1978,1978,2078,34.1137,135.824,{nan},"{'GEM': {'G100000602321'}, 'GPD': {'WRI1000712'}, 'GEO': {'GEO-45038'}}",917
 25,Okutataragi,Hydro,Pumped Storage,Storage,JP,1932,,,,,,1974,1974,2074,35.2373,134.834,{nan},"{'GEM': {'G100000602320'}, 'GPD': {'WRI1000710'}, 'GEO': {'GEO-45037'}}",2014
@@ -179,7 +179,7 @@
 177,Kudamatsu,Oil,Steam Turbine,PP,JP,700,,,,,,1977,1977,2023,34.011554,131.852374,{nan},"{'GEM': {'G100000412678'}, 'GEO': {'GEO-3914'}}",605
 178,Kawatetsu Chiba Clean,CCGT,CCGT,PP,JP,398,0.58,,,,,2002,2010,2050,35.578326,140.095885,{nan},"{'GEM': {'G100000406295'}, 'GEO': {'GEO-2656'}}",87
 179,Kashiwazaki Kariwa 7,Nuclear,Steam Turbine,PP,JP,1356,,,,,,1997,1997,2011,37.4259,138.5941,{nan},"{'GEM': {'G100000500034'}, 'GEO': {'GEO-3806'}}",970
-180,Kashiwazaki Kariwa 6,Nuclear,Steam Turbine,PP,JP,1356,,,,,,1996,1996,2046,37.4259,138.5941,{nan},"{'GEM': {'G100000500033'}, 'GEO': {'GEO-3806'}}",970
+180,Kashiwazaki Kariwa 6,Nuclear,Steam Turbine,PP,JP,1356,,,,,,2026,1996,2046,37.4259,138.5941,{nan},"{'GEM': {'G100000500033'}, 'GEO': {'GEO-3806'}}",970
 181,Kashiwazaki Kariwa 4,Nuclear,Steam Turbine,PP,JP,1100,,,,,,1994,1994,2011,37.4259,138.5941,{nan},"{'GEM': {'G100000500144'}, 'GEO': {'GEO-3806'}}",970
 182,Onagawa 3,Nuclear,Steam Turbine,PP,JP,825,,,,,,2002,2002,2011,38.3987,141.5003,{nan},"{'GEM': {'G100000500364'}, 'GEO': {'GEO-4616'}}",890
 183,Kashiwazaki Kariwa 3,Nuclear,Steam Turbine,PP,JP,1100,,,,,,1993,1993,2011,37.4259,138.5941,{nan},"{'GEM': {'G100000500143'}, 'GEO': {'GEO-3806'}}",970
@@ -294,7 +294,7 @@
 292,Owase Mita,Oil,Steam Turbine,PP,JP,875,,,,,,1987,1987,2027,34.067,136.207,{nan},"{'GPD': {'WRI1020062'}, 'GEO': {'GEO-44912'}}",1328
 293,Daini Numazawa,Hydro,Pumped Storage,PP,JP,920,,,,,,1981,1981,2081,37.4519,139.6062,"{nan, nan}","{'GEM': {'G100000602273', 'G100000602309'}, 'GPD': {'WRI1000693'}}",2086
 294,Hachinohe Taiheiyo,Oil,Steam Turbine,PP,JP,125.2,0.55,,,,,2014,2014,2054,40.5353,141.5019,{nan},"{'GPD': {'WRI1020084'}, 'GEO': {'GEO-44920'}}",561
-295,Fukushima Daina,Nuclear,,PP,JP,4400,,,,,,1982,1982,2032,37.3164,141.0265,{nan},"{'GPD': {'WRI1000678'}, 'GEO': {'GEO-3249'}}",1002
+295,Fukushima Daina,Nuclear,,PP,JP,4400,,,,,,1982,1982,2011,37.3164,141.0265,{nan},"{'GPD': {'WRI1000678'}, 'GEO': {'GEO-3249'}}",1002
 296,Aomori Prefecture Hachinohe Solar,Solar,PV,PP,JP,10.5,,,,,,2013,2013,2035,40.5522,141.4353,"{nan, nan, nan, nan}","{'GEM': {'G100001037972', 'G100001037943', 'G100001037940', 'G100001037954'}, 'GPD': {'WRI1026472'}}",1699
 297,Aomori Prefecture Misawa Solar,Solar,PV,PP,JP,11.7,,,,,,2013,2013,2036,40.7559,141.3839,"{nan, nan, nan, nan}","{'GEM': {'G100001038002', 'G100001037983', 'G100001037939', 'G100001037966'}, 'GPD': {'WKS0068355', 'WKS0072946'}}",1985
 298,Aomori Prefecture Noheji Town Solar,Solar,PV,PP,JP,12.9,,,,,,2017,2017,2037,40.84995,141.11335,"{nan, nan}","{'GEM': {'G100001038018', 'G100001038024'}, 'GPD': {'WKS0069479'}}",1747
@@ -4085,7 +4085,6 @@
 4083,Shiga Prefecture Takashima City Solar,Solar,PV,PP,JP,3,,,,,,2020,2020,2039,35.3415,135.9373,{nan},{'GEM': {'G100001042888'}},2041
 4084,Shiga Prefecture Yasu Solar,Solar,PV,PP,JP,2.9,,,,,,2013,2013,2039,35.1375,135.9974,"{nan, nan}","{'GEM': {'G100001042917', 'G100001042827'}}",2040
 4085,Shiga Prefecture Yasu Solar,Solar,PV,PP,JP,2.5,,,,,,2013,2013,2035,35.051,136.0285,"{nan, nan}","{'GEM': {'G100001042824', 'G100001042821'}}",1084
-4086,Shimane 3,Nuclear,Steam Turbine,PP,JP,1373,,,,,,1990.16666666667,1990.16666666667,2040.16666666667,35.5383,132.9992,{nan},{'GEM': {'G100000500037'}},1093
 4087,Shimane Prefecture Gotsu City Solar,Solar,PV,PP,JP,3.9,,,,,,2015,2015,2036,35.0354,132.288933333333,"{nan, nan, nan}","{'GEM': {'G100001043787', 'G100001043765', 'G100001043780'}}",2321
 4088,Shimane Prefecture Gotsu City Solar,Solar,PV,PP,JP,15.1,,,,,,2013,2013,2042,34.97656,132.18755,"{nan, nan, nan, nan, nan, nan, nan, nan, nan, nan}","{'GEM': {'G100001043749', 'G100001043750', 'G100001043738', 'G100001043748', 'G100001043737', 'G100001043800', 'G100001043774', 'G100001043752', 'G100001043766', 'G100001043795'}}",2321
 4089,Shimane Prefecture Hamada City Solar,Solar,PV,PP,JP,11.8,,,,,,2015,2015,2040,34.8987,132.10645,"{nan, nan}","{'GEM': {'G100001043739', 'G100001043773'}}",2322
