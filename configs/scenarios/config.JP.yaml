@@ -9,11 +9,11 @@ enable:
   retrieve_databundle: true #  Recommended 'true', for the first run. Otherwise data might be missing.
   retrieve_databundle_sector: true
   retrieve_cost_data: true # true: retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
-  retrieve_cutout: true
+  retrieve_cutout: false # only available for weather year 2013 - be careful when using this as both snapshots start and end, and load_options.weather_year need to be adjusted accordingly
   download_osm_data: true # If 'true', OpenStreetMap data will be downloaded for the above given countries
   download_global_buildings: false # If 'true', GlobalMLBuildingFootprints data will be downloaded for the above given countries
   build_natura_raster: false # If 'true', then an exclusion raster will be build. Otherwise use pregenerated raster.
-  build_cutout: false
+  build_cutout: true # Use build_cutout for weather year 2023
   # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
   # requires cds API key https://cds.climate.copernicus.eu/how-to-api
   # More information https://atlite.readthedocs.io/en/latest/introduction.html#datasets
@@ -22,7 +22,7 @@ enable:
 
 
 run:
-  name: "JP" # use this to keep track of runs with different settings
+  name: "JP_po2023_cy2020_wy2023_dc2023" # use this to keep track of runs with different settings
   sector_name: "JP" # use this to keep track of sector scenario runs
   shared_cutouts: true # set to true to share the default cutout(s) across runs
   # Note: value false requires build_cutout to be enabled
@@ -40,9 +40,14 @@ scenario:
   demand:
   - "AB"
 
+snapshots:
+  start: "2023-01-01"
+  end: "2024-01-01"
+  inclusive: "left" # end is not inclusive
+
 co2:
-  limit: 4.992e+8     # annual cap [tCO2/year]; base * 1.1 for calibration purposes
-  base: 4.465e+8     # power sector emissions JP 2023 https://www.iea.org/countries/japan/emissions
+  limit: 4.465e+8     # annual cap [tCO2/year]
+  base: 4.465e+8     # power sector emissions JP 2023 https://www.iea.org/countries/japan/emissions, 2020: 4.800e+8 [tCO2/year], 2023: 4.465 [tCO2/year]
   emission_price: 0. # [currency/tCO2]; active via Ep wildcard
   automatic_emission: # derive co2.limit from historical emission data instead of the value above
     enable: false
@@ -103,7 +108,7 @@ lines:
 
 # Costs Configuration
 costs:
-  year: 2025 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020
+  year: 2020 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020
   technology_data_version: v0.15.0
   discountrate: [0.071] #, 0.086, 0.111]
   country_specific_data: "" # (optional) Reference to the desired technology-data directory for techno-economic input data; Only "" and "US" supported, for other values check the technology-data output directory
@@ -141,9 +146,29 @@ costs:
   #   nuclear: 10
   # VOM: # EUR/MWh
   #   CCGT: 4.2
-  # fuel: # EUR/MWh
-  #   gas: 10.1
+  fuel: # EUR/MWh
+  #  coal: 1780 # 2020, JPY2025/MWh_th / 10.53 EUR2025/MWh_th, Japan CIF coal import price (Ministry of Finance Trade Statistics / METI Energy White Paper 2020)
+  #  oil: 4250 # 2020, JPY2025/MWh_th / 25.15 EUR2025/MWh_th, Japan Crude Cocktail (JCC) average import price (Ministry of Finance Trade Statistics / METI)
+  #  gas: 4825 # 2020, JPY2025/MWh_th / 28.55 EUR2025/MWh_th, Japan average LNG import price 2020 (JOGMEC / Ministry of Finance Trade Statistics)
+  #  nuclear: 630 # 2020, JPY2025/MWh_th / 3.73 EUR2025/MWh_th, METI Power Generation Cost Verification WG (fuel cycle cost = 1.7 JPY/kWh_e, converted with eff=0.33)
+    coal: 3020 # 2023, JPY2025/MWh_th / 17.87 EUR2025/MWh_th, Japan CIF coal import price (Ministry of Finance Trade Statistics / METI Energy White Paper 2023)
+    oil: 7480 # 2023, JPY2025/MWh_th / 44.25 EUR2025/MWh_th, Japan Crude Cocktail (JCC) average import price (Ministry of Finance Trade Statistics / JOGMEC)
+    gas: 6810 # 2023, JPY2025/MWh_th / 40.29 EUR2025/MWh_th, Japan average LNG import price 2023 (JOGMEC / Ministry of Finance Trade Statistics)
+    nuclear: 630 # 2023, JPY2025/MWh_th / 3.73 EUR2025/MWh_th, METI Power Generation Cost Verification WG (fuel cycle cost = 1.7 JPY/kWh_e, converted with eff=0.33)
   # lifetime: # years
   #   CCGT: 25.0
-  # efficiency: # per unit
-  #   CCGT: 0.58
+  efficiency: # per unit
+    CCGT: 0.48 # METI
+    oil: 0.38 # METI
+    coal: 0.41 # METI
+
+# DemandCast and GEGIS are two available options
+# DemandCast covers 2000-2024
+# GEGIS dataset provides data for 2011, 2013, 2018
+# Details and comparison are provided in
+# https://github.com/pypsa-meets-earth/pypsa-earth/issues/1724
+load_options:
+  source: "demcast" # "demcast" or "gegis"
+  weather_year: 2023 # Weather year of the load profile
+  prediction_year: 2030 # Valid only if "gegis" used as a source
+  scale: 1 # scales all load time-series, i.e. 2 = doubles load
