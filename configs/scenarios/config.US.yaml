@@ -195,6 +195,9 @@ sector:
   heat_pump_sink_T: 55 #Celsius, based on DTU / large area radiators; used un build_cop_profiles.py
   time_dep_hp_cop: true #time dependent heat pump coefficient of performance
 
+  ammonia:
+    enable: true
+
   land_transport_fuel_cell_share:
     AB_2023: 0.0
   land_transport_electric_share:
