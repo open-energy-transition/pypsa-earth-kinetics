@@ -196,7 +196,7 @@ sector:
   time_dep_hp_cop: true #time dependent heat pump coefficient of performance
 
   ammonia:
-    enable: true
+    enable: false
 
   land_transport_fuel_cell_share:
     AB_2023: 0.0
