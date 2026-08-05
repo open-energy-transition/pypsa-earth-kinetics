@@ -13,7 +13,7 @@ enable:
   download_osm_data: true # If 'true', OpenStreetMap data will be downloaded for the above given countries
   download_global_buildings: false # If 'true', GlobalMLBuildingFootprints data will be downloaded for the above given countries
   build_natura_raster: true # If 'true', then an exclusion raster will be built. Otherwise use pregenerated raster.
-  build_cutout: true # Use build_cutout for weather year 2023
+  build_cutout: false # Use build_cutout for weather year 2023
   # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
   # requires cds API key https://cds.climate.copernicus.eu/how-to-api
   # More information https://atlite.readthedocs.io/en/latest/introduction.html#datasets
@@ -21,8 +21,8 @@ enable:
   custom_busmap: false # if true, use "data/custom_busmap_elec_s{simpl}_{clusters}.csv" for the clustering instead of the clustering algorithms
 
 run:
-  name: "US_po2023_cy2020_wy2023_dc2023" # use this to keep track of runs with different settings
-  sector_name: "US_po2023_cy2020_wy2023_dc2023" # use this to keep track of sector scenario runs
+  name: "US_po2023_cy2020_wy2023_dc2023_elec" # use this to keep track of runs with different settings
+  sector_name: "US_po2023_cy2020_wy2023_dc2023_sec" # use this to keep track of sector scenario runs
   shared_cutouts: true # set to true to share the default cutout(s) across runs
   # Note: value false requires build_cutout to be enabled
   allow_scenario_failure: false # If True, the workflow will continue even if a scenario in run_scenario fails
@@ -119,6 +119,9 @@ costs:
     CCGT: 0.4429 # EIA https://www.eia.gov/electricity/annual/html/epa_08_01.html
     nuclear: 0.3254 # EIA https://www.eia.gov/electricity/annual/html/epa_08_01.html
     biomass: 0.30 # EIA https://www.eia.gov/electricity/annual/html/epa_08_01.html
+
+fossil_reserves:
+  oil: 0 #TWh Maybe redundant
 
 # DemandCast and GEGIS are two available options
 # DemandCast covers 2000-2024
