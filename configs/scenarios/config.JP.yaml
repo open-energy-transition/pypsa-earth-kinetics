@@ -13,7 +13,7 @@ enable:
   download_osm_data: true # If 'true', OpenStreetMap data will be downloaded for the above given countries
   download_global_buildings: false # If 'true', GlobalMLBuildingFootprints data will be downloaded for the above given countries
   build_natura_raster: false # If 'true', then an exclusion raster will be build. Otherwise use pregenerated raster.
-  build_cutout: true # Use build_cutout for weather year 2023
+  build_cutout: false # Use build_cutout for weather year 2023
   # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
   # requires cds API key https://cds.climate.copernicus.eu/how-to-api
   # More information https://atlite.readthedocs.io/en/latest/introduction.html#datasets
@@ -31,12 +31,12 @@ run:
 scenario:
   simpl: [""]
   ll: ["v1"]
-  clusters: [20]
-  opts: [Co2L-1h]
+  clusters: [100]
+  opts: [Co2L-3h]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2023
   sopts:
-  - "144h"
+  - "3h"
   demand:
   - "AB"
 
@@ -144,7 +144,7 @@ costs:
   #   CCGT: 830000
   # FOM: # %/year
   #   nuclear: 10
-  # VOM: # EUR/MWh
+  # VOM:
   #   CCGT: 4.2
   fuel: # EUR/MWh
   #  coal: 1780 # 2020, JPY2025/MWh_th / 10.53 EUR2025/MWh_th, Japan CIF coal import price (Ministry of Finance Trade Statistics / METI Energy White Paper 2020)
@@ -177,6 +177,9 @@ existing_capacities:
   grouping_years_power: [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2023, 2025, 2030]
 
 sector:
+  oil:
+    reserves: 0
+
   enable:
     heat: true
     biomass: false
