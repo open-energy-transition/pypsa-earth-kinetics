@@ -353,7 +353,7 @@ rule base_network:
 
 rule build_bus_regions:
     params:
-        alternative_clustering=config["cluster_options"]["alternative_clustering"],
+        alternative_clustering=config["clustering"]["alternative_clustering"],
         crs=config["crs"],
         countries=config["countries"],
     input:
@@ -593,7 +593,7 @@ rule build_renewable_profiles:
         crs=config["crs"],
         renewable=config["renewable"],
         countries=config["countries"],
-        alternative_clustering=config["cluster_options"]["alternative_clustering"],
+        alternative_clustering=config["clustering"]["alternative_clustering"],
     input:
         unpack(inputs_hydro),
         natura="resources/" + RDIR + "natura.tiff",
@@ -628,7 +628,7 @@ rule build_powerplants:
         geo_crs=config["crs"]["geo_crs"],
         countries=config["countries"],
         gadm_layer_id=config["build_shape_options"]["gadm_layer_id"],
-        alternative_clustering=config["cluster_options"]["alternative_clustering"],
+        alternative_clustering=config["clustering"]["alternative_clustering"],
         powerplants_filter=config["electricity"]["powerplants_filter"],
         custom_powerplants_option=config["electricity"]["custom_powerplants"],
     input:
@@ -662,7 +662,7 @@ rule add_electricity:
         fill_values=config["costs"]["fill_values"],
         conventional=config.get("conventional", {}),
         electricity=config["electricity"],
-        alternative_clustering=config["cluster_options"]["alternative_clustering"],
+        alternative_clustering=config["clustering"]["alternative_clustering"],
         renewable=config["renewable"],
         length_factor=config["lines"]["length_factor"],
         existing_capacities=config["existing_capacities"],
@@ -706,10 +706,10 @@ rule add_electricity:
 
 rule simplify_network:
     params:
-        aggregation_strategies=config["cluster_options"]["aggregation_strategies"],
+        aggregation_strategies=config["clustering"]["aggregation_strategies"],
         renewable=config["renewable"],
         crs=config["crs"],
-        cluster_options=config["cluster_options"],
+        cluster_options=config["clustering"],
         countries=config["countries"],
         build_shape_options=config["build_shape_options"],
         electricity=config["electricity"],
@@ -748,14 +748,14 @@ rule simplify_network:
 
 rule cluster_network:
     params:
-        aggregation_strategies=config["cluster_options"]["aggregation_strategies"],
+        aggregation_strategies=config["clustering"]["aggregation_strategies"],
         build_shape_options=config["build_shape_options"],
         electricity=config["electricity"],
         length_factor=config["lines"]["length_factor"],
         renewable=config["renewable"],
         crs=config["crs"],
         countries=config["countries"],
-        cluster_options=config["cluster_options"],
+        cluster_options=config["clustering"],
         focus_weights=config.get("focus_weights", None),
         custom_busmap=config["enable"].get("custom_busmap", False),
     input:
@@ -1201,7 +1201,7 @@ if not config["custom_data"]["gas_network"]:
     rule prepare_gas_network:
         params:
             gas_config=config["sector"]["gas"],
-            alternative_clustering=config["cluster_options"]["alternative_clustering"],
+            alternative_clustering=config["clustering"]["alternative_clustering"],
             custom_gas_network=config["custom_data"]["gas_network"],
         input:
             regions_onshore="resources/"
@@ -1261,7 +1261,7 @@ rule prepare_sector_network:
         h2_underground=config["custom_data"]["h2_underground"],
         countries=config["countries"],
         gadm_layer_id=config["build_shape_options"]["gadm_layer_id"],
-        alternative_clustering=config["cluster_options"]["alternative_clustering"],
+        alternative_clustering=config["clustering"]["alternative_clustering"],
         h2_policy=config["policy_config"]["hydrogen"],
         sector_options=config["sector"],
         foresight=config["foresight"],
@@ -1358,7 +1358,7 @@ rule build_ship_profile:
 rule add_export:
     params:
         gadm_layer_id=config["build_shape_options"]["gadm_layer_id"],
-        alternative_clustering=config["cluster_options"]["alternative_clustering"],
+        alternative_clustering=config["clustering"]["alternative_clustering"],
         store=config["export"]["store"],
         store_capital_costs=config["export"]["store_capital_costs"],
         export_profile=config["export"]["export_profile"],
@@ -2010,7 +2010,7 @@ rule build_industrial_distribution_key:  #default data
     params:
         countries=config["countries"],
         gadm_layer_id=config["build_shape_options"]["gadm_layer_id"],
-        alternative_clustering=config["cluster_options"]["alternative_clustering"],
+        alternative_clustering=config["clustering"]["alternative_clustering"],
         industry_database=config["custom_data"]["industry_database"],
     input:
         regions_onshore="resources/"
