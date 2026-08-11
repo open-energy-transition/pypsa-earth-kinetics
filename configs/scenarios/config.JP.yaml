@@ -13,7 +13,7 @@ enable:
   download_osm_data: true # If 'true', OpenStreetMap data will be downloaded for the above given countries
   download_global_buildings: false # If 'true', GlobalMLBuildingFootprints data will be downloaded for the above given countries
   build_natura_raster: false # If 'true', then an exclusion raster will be build. Otherwise use pregenerated raster.
-  build_cutout: false # Use build_cutout for weather year 2023
+  build_cutout: true # Use build_cutout for weather year 2023
   # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
   # requires cds API key https://cds.climate.copernicus.eu/how-to-api
   # More information https://atlite.readthedocs.io/en/latest/introduction.html#datasets
@@ -31,12 +31,12 @@ run:
 scenario:
   simpl: [""]
   ll: ["v1"]
-  clusters: [100]
-  opts: [Co2L-3h]
+  clusters: [20]
+  opts: [Co2L-1h]
   planning_horizons: # investment years for myopic and perfect; or costs year for overnight
   - 2023
   sopts:
-  - "3h"
+  - "1h"
   demand:
   - "AB"
 
@@ -46,8 +46,8 @@ snapshots:
   inclusive: "left" # end is not inclusive
 
 co2:
-  limit: 4.465e+8     # annual cap [tCO2/year]
-  base: 4.465e+8     # power sector emissions JP 2023 https://www.iea.org/countries/japan/emissions, 2020: 4.800e+8 [tCO2/year], 2023: 4.465 [tCO2/year]
+  limit: 9.348e+8     # annual cap [tCO2/year]
+  base: 4.465e+8     # power sector emissions JP 2023 https://www.iea.org/countries/japan/emissions, 2020: 4.800e+8 [tCO2/year], 2023: 4.465e+8 [tCO2/year]
   emission_price: 0. # [currency/tCO2]; active via Ep wildcard
   automatic_emission: # derive co2.limit from historical emission data instead of the value above
     enable: false
@@ -180,78 +180,6 @@ fossil_reserves:
   oil: 0
 
 sector:
-  enable:
-    heat: true
-    biomass: false
-    industry: false
-    shipping: false
-    aviation: false
-    land_transport: false
-    rail_transport: false
-    agriculture: false
-    residential: false
-    services: false
-
-  # Disable sector-coupling technologies inherited from config.default.yaml
-  hydrogen:
-    network: false
-    h2_turbine: false
-    gas_network_repurposing: false
-    set_color_shares: false
-    underground_storage:
-      enabled: false
-
-  ammonia:
-    enable: false
-
-  electricity_distribution_grid: false
-  enable_electricity_connection_cost: false
-
-  solar_rooftop:
-    enable: false
-
-  home_battery: false
-
-  co2_network: false
-  methanation: false
-  helmeth: false
-  dac: false
-  cc: false
-  fischer_tropsch: false
-
-  # ------------------- HEAT SECTOR -------------------
-
-  district_heating:
-    potential: 0.3
-    progress: 0.0
-    district_heating_loss: 0.15
-
-  reduce_space_heat_exogenously: false
-  reduce_space_heat_exogenously_factor: 0.10
-
-  space_heat_share: 0.6
-
-  tes: true
-  tes_tau:
-    decentral: 3
-    central: 180
-
-  boilers: true
-  oil_boilers: false
-  chp: true
-  micro_chp: false
-
-  solar_thermal_collector:
-    enable: true
-    cf_correction: 0.788457
-    clearsky_model: simple
-    orientation:
-      slope: 45.0
-      azimuth: 180.0
-
-  heat_pump_sink_T: 55
-  time_dep_hp_cop: true
-
   land_transport_fuel_cell_share:
     AB_2023: 0.0
 
