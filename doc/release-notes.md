@@ -48,6 +48,20 @@ This part of documentation collects descriptive release notes to capture the mai
 
 **Minor Changes and bug-fixing**
 
+* Add docstrings to build_natura_raster script [PR ##1844](https://github.com/pypsa-meets-earth/pypsa-earth/pull/#1844)
+
+* Enable battery fetch from powerplantmatching [PR #1970](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1970)
+
+* Add links to national-scale cutouts for a few countries (Bolivia, Colombia, Zambia) [PR #1756](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1756)
+
+* Enable deep-copy for config migration for back-compatibility [PR #1960](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1960)
+
+* Add plotting and summary visualization page in documentation [PR #1765](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1765)
+
+* Pin atlite to 0.4.1 in Pixi [PR #1935](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1935)
+
+* Replace hydrobasins for CI testing with a dataset created by Brigham Young University [PR #1944](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1944)
+
 * Add `custom_powerplants` into params to make sure change of the config reruns the workflow [PR #1927](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1927)
 
 * Fix misleading linetype voltage warning in `base_network.py` [PR #1883](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1883)
