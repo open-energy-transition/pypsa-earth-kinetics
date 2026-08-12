@@ -155,6 +155,7 @@ costs:
     oil: 7480 # 2023, JPY2025/MWh_th / 44.25 EUR2025/MWh_th, Japan Crude Cocktail (JCC) average import price (Ministry of Finance Trade Statistics / JOGMEC)
     gas: 6810 # 2023, JPY2025/MWh_th / 40.29 EUR2025/MWh_th, Japan average LNG import price 2023 (JOGMEC / Ministry of Finance Trade Statistics)
     nuclear: 630 # 2023, JPY2025/MWh_th / 3.73 EUR2025/MWh_th, METI Power Generation Cost Verification WG (fuel cycle cost = 1.7 JPY/kWh_e, converted with eff=0.33)
+    biomass: 29500 # 2023 estimate
   # lifetime: # years
   #   CCGT: 25.0
   efficiency: # per unit
