@@ -1231,8 +1231,39 @@ def add_biomass(n: pypsa.Network, costs: pd.DataFrame) -> None:
 
         # add biomass transport
         biomass_transport = create_network_topology(
-            n, "biomass transport ", bidirectional=False
+            n,
+            "biomass transport ",
+            bidirectional=False,
         )
+
+        biomass_locations = pd.Index(spatial.biomass.locations)
+
+        valid_biomass_routes = biomass_transport["bus0"].isin(
+            biomass_locations
+        ) & biomass_transport["bus1"].isin(biomass_locations)
+
+        if (~valid_biomass_routes).any():
+            logger.warning(
+                "Dropping biomass routes outside the biomass topology:\n%s",
+                biomass_transport.loc[
+                    ~valid_biomass_routes,
+                    [
+                        "bus0",
+                        "bus1",
+                    ],
+                ].to_string(),
+            )
+
+        biomass_transport = biomass_transport.loc[valid_biomass_routes].copy()
+
+        biomass_bus_map = pd.Series(
+            spatial.biomass.nodes,
+            index=spatial.biomass.locations,
+        )
+
+        biomass_transport["bus0"] = biomass_transport["bus0"].map(biomass_bus_map)
+
+        biomass_transport["bus1"] = biomass_transport["bus1"].map(biomass_bus_map)
 
         # costs
         countries_not_in_index = set(countries) - set(biomass_transport.index)
@@ -1261,8 +1292,8 @@ def add_biomass(n: pypsa.Network, costs: pd.DataFrame) -> None:
         n.madd(
             "Link",
             biomass_transport.index,
-            bus0=biomass_transport.bus0 + " solid biomass",
-            bus1=biomass_transport.bus1 + " solid biomass",
+            bus0=biomass_transport["bus0"].to_numpy(),
+            bus1=biomass_transport["bus1"].to_numpy(),
             p_nom_extendable=True,
             length=biomass_transport.length.values,
             marginal_cost=biomass_transport.costs * biomass_transport.length.values,
@@ -1424,7 +1455,38 @@ def add_co2(n: pypsa.Network, costs: pd.DataFrame, co2_network: bool) -> None:
     if co2_network:
 
         logger.info("Adding CO2 network.")
-        co2_links = create_network_topology(n, "CO2 pipeline ")
+        co2_links = create_network_topology(
+            n,
+            "CO2 pipeline ",
+        )
+
+        co2_locations = pd.Index(spatial.co2.locations)
+
+        valid_co2_routes = co2_links["bus0"].isin(co2_locations) & co2_links[
+            "bus1"
+        ].isin(co2_locations)
+
+        if (~valid_co2_routes).any():
+            logger.warning(
+                "Dropping CO2 routes outside the CO2 topology:\n%s",
+                co2_links.loc[
+                    ~valid_co2_routes,
+                    [
+                        "bus0",
+                        "bus1",
+                    ],
+                ].to_string(),
+            )
+
+        co2_links = co2_links.loc[valid_co2_routes].copy()
+
+        co2_bus_map = pd.Series(
+            spatial.co2.nodes,
+            index=spatial.co2.locations,
+        )
+
+        co2_links["bus0"] = co2_links["bus0"].map(co2_bus_map)
+        co2_links["bus1"] = co2_links["bus1"].map(co2_bus_map)
 
         cost_onshore = (
             (1 - co2_links.underwater_fraction)
@@ -1441,8 +1503,8 @@ def add_co2(n: pypsa.Network, costs: pd.DataFrame, co2_network: bool) -> None:
         n.madd(
             "Link",
             co2_links.index,
-            bus0=co2_links.bus0.values + " co2 stored",
-            bus1=co2_links.bus1.values + " co2 stored",
+            bus0=co2_links["bus0"].to_numpy(),
+            bus1=co2_links["bus1"].to_numpy(),
             p_min_pu=-1,
             p_nom_extendable=True,
             length=co2_links.length.values,
