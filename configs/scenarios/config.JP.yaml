@@ -198,3 +198,10 @@ sector:
     lignite: lignite
     biomass: biomass
   keep_existing_capacities: true
+
+  # ------------------- BIOMASS SECTOR -------------------
+
+  biomass_transport: false # biomass transport between nodes
+  biomass_transport_default_cost: 0.1 #EUR/km/MWh
+  solid_biomass_potential: 40 # TWh/a, Potential of whole modelled area
+  biogas_potential: 0.5 # TWh/a, Potential of whole modelled area
