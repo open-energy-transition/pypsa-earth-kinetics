@@ -22,7 +22,7 @@ enable:
 
 
 run:
-  name: "JP_po2023_cy2020_wy2023_dc2023" # use this to keep track of runs with different settings
+  name: "JP" # use this to keep track of runs with different settings
   sector_name: "JP" # use this to keep track of sector scenario runs
   shared_cutouts: true # set to true to share the default cutout(s) across runs
   # Note: value false requires build_cutout to be enabled
