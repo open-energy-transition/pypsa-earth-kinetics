@@ -218,9 +218,6 @@ demand_data:
 existing_capacities:
   grouping_years_power: [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2023, 2025, 2030]
 
-fossil_reserves:
-  oil: 0
-
 # ------------------- Enabled sectors & fuel infrastructure -------------------
 sector:
   enable:
