@@ -34,10 +34,6 @@ snapshots:
   end: "2024-01-01"
   inclusive: "left" # end is not inclusive
 
-results_dir: results/ # solved networks and sector postprocessing (RESDIR in Snakefile)
-summary_dir: results/ # summaries, plots, and copied configs (SDIR in Snakefile)
-
-
 # =================== DATA RETRIEVAL ===================
 enable:
   # ----------------- Retrieving data -----------------
@@ -112,21 +108,6 @@ lines:
   s_nom_max_min: -.inf
   length_factor: 1.25
   under_construction: "zero" # 'zero': set capacity to zero, 'remove': remove, 'keep': with full capacity
-
-# ------------------- Weather & renewables -------------------
-atlite:
-  nprocesses: 4
-  cutouts:
-    cutout-2023-era5:
-      module: era5
-      dx: 0.3 # cutout resolution
-      dy: 0.3 # cutout resolution
-      # The cutout time is automatically set by the snapshot range. See `snapshot:` option above and 'build_cutout.py'.
-      # time: ["2013-01-01", "2014-01-01"]  # to manually specify a different weather year (~70 years available)
-      # The cutout spatial extent [x,y] is automatically set by country selection. See `countries:` option above and 'build_cutout.py'.
-      # x: [-12., 35.]  # set cutout range manual, instead of automatic by boundaries of country
-      # y: [33., 72]    # manual set cutout range
-  default: cutout-2023-era5
 
 # ------------------- Costs & emissions -------------------
 costs:
@@ -309,10 +290,6 @@ sector:
 
   lignite:
     spatial_lignite: false
-
-  oil:
-    spatial_oil: true
-    reserves: 100 # TWh per bus: Maybe redundant
 
   ammonia:
     enable: false
