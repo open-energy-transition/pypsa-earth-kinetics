@@ -14,7 +14,7 @@ countries: ["JP"] # ISO codes, continent, or custom region
 # For these countries, users are encouraged to check the available regional
 # models and contribute to their development.
 run:
-  name: "JP_po2023_cy2020_wy2023_dc2023" # optional; stores intermediate files in a subfolder (e.g. "KZ" → resources/KZ/, results/KZ/); empty = no subfolder
+  name: "JP" # optional; stores intermediate files in a subfolder (e.g. "KZ" → resources/KZ/, results/KZ/); empty = no subfolder
   sector_name: "JP" # optional; sector-coupling only — subfolder under results_dir/
   shared_cutouts: true # true: cutouts/ shared across runs; false: cutouts/{name}/ per run
   allow_scenario_failure: false # If True, the workflow will continue even if a scenario in run_scenario fails
