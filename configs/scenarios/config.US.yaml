@@ -5,21 +5,6 @@
 countries: ["US"]
 # Can be replaced by country ["NG", "BJ"], continent ["Africa"] or user-specific region, see more at https://pypsa-earth.readthedocs.io/en/latest/user-guide/configuration/#top-level-configuration
 
-enable:
-  retrieve_databundle: true #  Recommended 'true', for the first run. Otherwise data might be missing.
-  retrieve_databundle_sector: false
-  retrieve_cost_data: true #retrieves cost data from technology data and saves in resources/costs.csv, false: uses cost data in data/costs.csv
-  retrieve_cutout: false # only available for weather year 2013 - be careful when using this as both snapshots start and end, and load_options.weather_year need to be adjusted accordingly
-  download_osm_data: true # If 'true', OpenStreetMap data will be downloaded for the above given countries
-  download_global_buildings: false # If 'true', GlobalMLBuildingFootprints data will be downloaded for the above given countries
-  build_natura_raster: true # If 'true', then an exclusion raster will be built. Otherwise use pregenerated raster.
-  build_cutout: false # Use build_cutout for weather year 2023
-  # If "build_cutout" : true, then environmental data is extracted according to `snapshots` date range and `countries`
-  # requires cds API key https://cds.climate.copernicus.eu/how-to-api
-  # More information https://atlite.readthedocs.io/en/latest/introduction.html#datasets
-  progress_bar: true # show progress bar during downloading routines and other long-running tasks
-  custom_busmap: false # if true, use "data/custom_busmap_elec_s{simpl}_{clusters}.csv" for the clustering instead of the clustering algorithms
-
 run:
   name: "US" # use this to keep track of runs with different settings
   sector_name: "US" # use this to keep track of sector scenario runs
@@ -36,45 +21,47 @@ scenario:
   - 2023
   sopts:
   - "3h"
-  demand:
-  - "AB"
 
 snapshots:
   start: "2023-01-01"
   end: "2024-01-01"
   inclusive: "left" # end is not inclusive
 
+# =================== DATA RETRIEVAL ===================
+enable:
+  retrieve_databundle: true # Recommended 'true' for the first run. Otherwise data might be missing.
+  download_osm_data: true # If true, OpenStreetMap data will be downloaded for the countries above.
+  retrieve_cutout: false # The bundled cutout is only available for weather year 2013.
+  retrieve_cost_data: true # False uses the existing cost data in data/costs.csv.
+  retrieve_databundle_sector: false
+  download_global_buildings: false
+  build_cutout: true # Enable to build the cutout for weather year 2023.
+  build_natura_raster: true
+  progress_bar: true
+  custom_busmap: false
+
+# =================== NETWORK & RESOURCES ===================
+# DemandCast covers 2000-2024; GEGIS provides data for 2011, 2013, and 2018.
+load_options:
+  source: "demcast"
+  weather_year: 2023
+  prediction_year: 2030 # Valid only when GEGIS is used.
+  scale: 1
+
 electricity:
   extendable_carriers:
-      # Note: For landlocked countries (e.g., Jordan, Austria, Switzerland), remove 'offwind-ac' and 'offwind-dc'
-          # from the Generator list below, as these offshore wind technologies require coastline access.
+    # Note: For landlocked countries (e.g., Jordan, Austria, Switzerland), remove 'offwind-ac' and 'offwind-dc'
+    # from the Generator list below, as these offshore wind technologies require coastline access.
     Generator: []
     StorageUnit: [] # battery, H2
     Store: []
     Link: [] # H2 pipeline
 
-co2:
-  limit: 4.413e+9    # annual cap [tCO2/year]
-  base: 1.490e+9     # power sector emissions US 2023 https://www.iea.org/countries/united-states/electricity
-  emission_price: 0. # [currency/tCO2]; active via Ep wildcard
-  automatic_emission: # derive co2.limit from historical emission data instead of the value above
-    enable: false
-    base_year: 1990  # any year from 1970 to 2018
-  budget:            # year-by-year reduction trajectory; used in all sector-coupled runs
-    enable: false
-    override_co2opt: true
-    base_value: limit # which co2 scalar to scale by year factors: "limit", "base", "absolute", or a float [tCO2/a]
-    year:
-      2020: 1.0
-      2025: 0.85
-      2030: 0.70
-      2035: 0.55
-      2040: 0.40
-      2045: 0.25
-      2050: 0.1
-
   powerplants_filter: (DateOut >= 2023 or DateOut != DateOut) and (DateIn <= 2023 or DateIn != DateIn)
-  custom_powerplants: false #  "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
+  custom_powerplants:
+    filepaths:
+    - data/custom_powerplants_US.csv
+    method: replace # false: use only powerplantmatching data; merge: combine both sources; replace: use only custom data
 
 # Costs Configuration
 costs:
@@ -120,19 +107,29 @@ costs:
     nuclear: 0.3254 # EIA https://www.eia.gov/electricity/annual/html/epa_08_01.html
     biomass: 0.30 # EIA https://www.eia.gov/electricity/annual/html/epa_08_01.html
 
-fossil_reserves:
-  oil: 0 #TWh Maybe redundant
+co2:
+  limit: 4.413e+9    # annual cap [tCO2/year]
+  base: 1.490e+9     # power sector emissions US 2023 https://www.iea.org/countries/united-states/electricity
+  emission_price: 0. # [currency/tCO2]; active via Ep wildcard
+  automatic_emission: # derive co2.limit from historical emission data instead of the value above
+    enable: false
+    base_year: 1990  # any year from 1970 to 2018
+  budget:            # year-by-year reduction trajectory; used in all sector-coupled runs
+    enable: false
+    override_co2opt: true
+    base_value: limit # which co2 scalar to scale by year factors: "limit", "base", "absolute", or a float [tCO2/a]
+    year:
+      2020: 1.0
+      2025: 0.85
+      2030: 0.70
+      2035: 0.55
+      2040: 0.40
+      2045: 0.25
+      2050: 0.1
 
-# DemandCast and GEGIS are two available options
-# DemandCast covers 2000-2024
-# GEGIS dataset provides data for 2011, 2013, 2018
-# Details and comparison are provided in
-# https://github.com/pypsa-meets-earth/pypsa-earth/issues/1724
-load_options:
-  source: "demcast" # "demcast" or "gegis"
-  weather_year: 2023 # Weather year of the load profile
-  prediction_year: 2030 # Valid only if "gegis" used as a source
-  scale: 1 # scales all load time-series, i.e. 2 = doubles load
+# =================== SECTOR OPTIONS ===================
+demand_data:
+  scenario: "AB"
 
 existing_capacities:
   grouping_years_power: [1960, 1965, 1970, 1975, 1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2023, 2025, 2030]
@@ -375,3 +372,13 @@ sector:
   keep_existing_capacities: true
 
   marginal_cost_storage: 0
+
+
+# =================== SOLVING ===================
+# Optimization options, memory limit, and named solver presets live in
+# configs/solving.default.yaml (merged via Snakefile configfile:).
+solving:
+  # ------------------- Solver -------------------
+  solver:
+    name: gurobi
+    options: gurobi-default
