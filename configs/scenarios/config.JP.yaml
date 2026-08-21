@@ -57,15 +57,12 @@ load_options:
   prediction_year: 2030 # Valid only if "gegis" used as a source
   scale: 1 # scales all load time-series, i.e. 2 = doubles load
 
-# ------------------- Electricity grid -------------------
-electricity:
-  # ----------------- Electricity generation -------------------
-  extendable_carriers:
-    Generator: [] # Remove 'offwind-ac' and 'offwind-dc' for landlocked countries (e.g., Jordan, Austria, Switzerland)
-    StorageUnit: [] # battery, H2, li-ion, vanadium, lfp, lair, pair, iron-air and more
-    Store: [] # li-ion, vanadium, lfp, lair, pair, iron-air and more
-    # See all available options for Store and StorageUnit in https://pypsa-earth.readthedocs.io/en/latest/user-guide/configuration/#storage-technologies
-    Link: [] # H2 pipeline
+  # ----------------- Existing powerplants -------------------
+  powerplants_filter: (DateOut >= 2023 or DateOut != DateOut) and (DateIn <= 2023 or DateIn != DateIn)
+  custom_powerplants:
+    filepaths:  # list of custom powerplant files used in "merge" and "replace" options
+    - data/custom_powerplants_JP.csv
+    method: replace  # "false" use only powerplantmatching (ppm) data, "merge" combines ppm and custom powerplants, "replace" use only custom powerplants
 
   conventional_carriers: [nuclear, oil, OCGT, CCGT, coal, lignite, geothermal, biomass]
   renewable_carriers: [solar, onwind, offwind-ac, offwind-dc, hydro]
