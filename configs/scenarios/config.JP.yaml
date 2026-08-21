@@ -358,9 +358,9 @@ sector:
   transport_internal_combustion_efficiency: 0.3
 
   land_transport_fuel_cell_share: # 1 means all FCEVs HERE
-    AB_2023: 0.0
+    AB_2020: 0.0
   land_transport_electric_share: # 1 means all EVs  # This leads to problems when non-zero HERE
-    AB_2023: 0.0
+    AB_2020: 0.0
 
   # ------------------- Biomass sector -------------------
   biomass_transport: true # biomass transport between nodes
