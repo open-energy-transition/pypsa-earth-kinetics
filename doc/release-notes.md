@@ -12,7 +12,7 @@ This part of documentation collects descriptive release notes to capture the mai
 
 **New Features and Major Changes**
 
-* Integrate additional tutorials for use-case documentation [PR #1930](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1930)
+* Inntegrate additional tutorials for use-case documentation [PR #1930](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1930)
 
 * Move ``plotting`` defaults to ``configs/plotting.default.yaml`` and solving defaults (``solving.options``, ``solving.mem``, ``solving.solver_options``) to ``configs/solving.default.yaml``; both still merge via Snakemake ``configfile:`` and remain overridable from ``config.yaml``. ``config.default.yaml`` keeps only ``solving.solver`` (name and preset choice) [PR #1957](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1957)
 
@@ -61,10 +61,17 @@ This part of documentation collects descriptive release notes to capture the mai
 * Reorganize config for ``co2``, ``solar_thermal``, and line length settings. Old config keys will be depreciated in future releases [PR #1863](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1863)
 
 **Minor Changes and bug-fixing**
+* Fix invalid biomass transport and CO2 pipeline connections [PR #1987](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1987)
 
-* Add docstrings to build_natura_raster script [PR ##1844](https://github.com/pypsa-meets-earth/pypsa-earth/pull/#1844)
+* Attach existing batteries as ``StorageUnit`` rather than Store+Link, so extra battery buses do not inflate the minimum cluster count during simplify/cluster [PR #1990](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1990)
+
+* Apply powerplant filter to custom datasets [PR #1995](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1995)
+
+* Remove configurable initial fossil-fuel reserves and fix transport profile weighting and temporal aggregation in sector-coupled networks [PR #1971](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1971)
 
 * Fix broken EDGAR v6.0 download URL and externalize CO2 emission data retrieval into dedicated `retrieve_emissions` and `build_co2_emissions` Snakemake rules; update `emission_extractor` in `prepare_network.py` to read the pre-built CSV [PR #1877](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1877)
+
+* Add docstrings to build_natura_raster script [PR #1844](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1844)
 
 * Enable battery fetch from powerplantmatching [PR #1970](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1970)
 
@@ -171,6 +178,8 @@ This part of documentation collects descriptive release notes to capture the mai
 * Add module-level and missing function docstrings and type hints to `scripts/_helpers.py` [PR #1857](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1857)
 
 * Fix result network path in the snakemake command on quick start page [PR #1928](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1928)
+
+* Polishing time-dependent quantities in prepare sector network [PR #1809](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1809)
 
 # PyPSA-Earth 0.8.0
 
