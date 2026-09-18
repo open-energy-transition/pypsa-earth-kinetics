@@ -18,6 +18,8 @@ This part of documentation collects descriptive release notes to capture the mai
 
 * Normalize OSM network indices before assigning line endpoints [PR #2038](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2038)
 
+* Preserve industry subsector detail in nodal demand [PR #2040](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2040)
+
 * Fix fallback to closest available CO2 emission year [PR #2018](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2018)
 
 * Update guidance on creating a new release [PR #2002](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2002)
