@@ -1441,6 +1441,12 @@ rule prepare_sector_network:
             + SECDIR
             + "demand/industrial_energy_demand_per_node_elec_s{simpl}_{clusters}_{planning_horizons}.csv",
         ),
+        industrial_demand_by_subsector=branch(
+            sector_enable["industry"],
+            "resources/"
+            + SECDIR
+            + "demand/industrial_energy_demand_per_node_by_subsector_elec_s{simpl}_{clusters}_{planning_horizons}.csv",
+        ),
         energy_totals="resources/" + SECDIR + "energy_totals_{planning_horizons}.csv",
         airports=branch(
             sector_enable["aviation"],

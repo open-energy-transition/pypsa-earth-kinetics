@@ -1910,8 +1910,16 @@ def add_shipping(
         )
 
 
+def _normalize_industry_subsector(subsector: str) -> str:
+    """Normalize industry subsector names for policy metadata."""
+    return re.sub(r"[^a-z0-9]+", "_", subsector.lower()).strip("_")
+
+
 def add_industry(
-    n: pypsa.Network, costs: pd.DataFrame, industrial_demand_fn: str
+    n: pypsa.Network,
+    costs: pd.DataFrame,
+    industrial_demand_fn: str,
+    industrial_demand_by_subsector_fn: str,
 ) -> None:
     """
     Add industrial technologies and industrial demands to the sector network
@@ -1924,6 +1932,8 @@ def add_industry(
         DataFrame containing the costs for industrial technologies
     industrial_demand_fn: str
         File path to the industrial demand data file
+    industrial_demand_by_subsector_fn: str
+        File path to the industrial demand data preserving carrier and subsector detail
 
     Returns
     -------
@@ -1936,64 +1946,113 @@ def add_industry(
         industrial_demand_fn, index_col=0, header=0
     )  # * 1e6
 
+    industrial_demand_by_subsector = read_csv_nafix(
+        industrial_demand_by_subsector_fn,
+        index_col=0,
+        header=[0, 1],
+    )
+
+    subsectors = industrial_demand_by_subsector.columns.get_level_values(
+        "subsector"
+    ).unique()
+    normalized_subsectors = {}
+
+    for subsector in subsectors:
+        normalized = _normalize_industry_subsector(subsector)
+        if not normalized:
+            raise ValueError(
+                f"Industry subsector {subsector!r} normalizes to an empty name."
+            )
+        normalized_subsectors.setdefault(normalized, []).append(subsector)
+
+    collisions = {
+        normalized: original
+        for normalized, original in normalized_subsectors.items()
+        if len(original) > 1
+    }
+
+    if collisions:
+        raise ValueError(
+            "Industry subsector names collide after normalization: " + str(collisions)
+        )
+
     # 1e6 to convert TWh to MWh
 
     # Add carrier Biomass
 
-    n.madd(
-        "Bus",
-        spatial.biomass.industry,
-        location=spatial.biomass.locations,
-        carrier="solid biomass for industry",
-    )
+    biomass_demand_by_subsector = industrial_demand_by_subsector["solid biomass"].loc[
+        spatial.nodes
+    ]
 
     if options["biomass_transport"]:
-        p_set = (
-            industrial_demand.loc[spatial.biomass.locations, "solid biomass"].rename(
-                index=lambda x: x + " solid biomass for industry"
-            )
-            / 8760
-        )
+        biomass_supply_buses = pd.Index(spatial.biomass.nodes)
     else:
-        p_set = industrial_demand["solid biomass"].sum() / 8760
+        biomass_supply_buses = pd.Index([spatial.biomass.nodes[0]] * len(spatial.nodes))
 
-    n.madd(
-        "Load",
-        spatial.biomass.industry,
-        bus=spatial.biomass.industry,
-        carrier="solid biomass for industry",
-        p_set=p_set,
-    )
+    biomass_co2_storage_buses = spatial.co2.df.loc[spatial.nodes, "nodes"].to_numpy()
 
-    n.madd(
-        "Link",
-        spatial.biomass.industry,
-        bus0=spatial.biomass.nodes,
-        bus1=spatial.biomass.industry,
-        carrier="solid biomass for industry",
-        p_nom_extendable=True,
-        efficiency=1.0,
-    )
-    if snakemake.params.sector_options["cc"]:
+    for subsector in biomass_demand_by_subsector.columns:
+        demand = biomass_demand_by_subsector[subsector]
+
+        if demand.fillna(0.0).eq(0.0).all():
+            continue
+
+        normalized_subsector = _normalize_industry_subsector(subsector)
+        biomass_industry_buses = (
+            spatial.nodes + f" solid biomass for industry {normalized_subsector}"
+        )
+
+        n.madd(
+            "Bus",
+            biomass_industry_buses,
+            location=spatial.nodes,
+            carrier="solid biomass for industry",
+        )
+
+        n.madd(
+            "Load",
+            biomass_industry_buses,
+            bus=biomass_industry_buses,
+            carrier="solid biomass for industry",
+            p_set=demand.to_numpy() / 8760.0,
+        )
+        n.loads.loc[biomass_industry_buses, "sector"] = "industry"
+        n.loads.loc[biomass_industry_buses, "subsector"] = normalized_subsector
+
         n.madd(
             "Link",
-            spatial.biomass.industry_cc,
-            bus0=spatial.biomass.nodes,
-            bus1=spatial.biomass.industry,
-            bus2="co2 atmosphere",
-            bus3=spatial.co2.nodes,
-            carrier="solid biomass for industry CC",
+            biomass_industry_buses,
+            bus0=biomass_supply_buses,
+            bus1=biomass_industry_buses,
+            carrier="solid biomass for industry",
             p_nom_extendable=True,
-            capital_cost=costs.at["cement capture", "fixed"]
-            * costs.at["solid biomass", "CO2 intensity"],
-            efficiency=0.9,  # TODO: make config option
-            efficiency2=-costs.at["solid biomass", "CO2 intensity"]
-            * costs.at["cement capture", "capture_rate"],
-            efficiency3=costs.at["solid biomass", "CO2 intensity"]
-            * costs.at["cement capture", "capture_rate"],
-            lifetime=costs.at["cement capture", "lifetime"],
+            efficiency=1.0,
             sector="industry",
+            subsector=normalized_subsector,
         )
+
+        if snakemake.params.sector_options["cc"]:
+            n.madd(
+                "Link",
+                spatial.nodes
+                + f" solid biomass for industry {normalized_subsector} CC",
+                bus0=biomass_supply_buses,
+                bus1=biomass_industry_buses,
+                bus2="co2 atmosphere",
+                bus3=biomass_co2_storage_buses,
+                carrier="solid biomass for industry CC",
+                p_nom_extendable=True,
+                capital_cost=costs.at["cement capture", "fixed"]
+                * costs.at["solid biomass", "CO2 intensity"],
+                efficiency=0.9,  # TODO: make config option
+                efficiency2=-costs.at["solid biomass", "CO2 intensity"]
+                * costs.at["cement capture", "capture_rate"],
+                efficiency3=costs.at["solid biomass", "CO2 intensity"]
+                * costs.at["cement capture", "capture_rate"],
+                lifetime=costs.at["cement capture", "lifetime"],
+                sector="industry",
+                subsector=normalized_subsector,
+            )
 
     # CARRIER = FOSSIL GAS
 
@@ -2004,61 +2063,72 @@ def add_industry(
 
     # industrial_demand.set_index("TWh/a (MtCO2/a)", inplace=True)
 
-    # n.add("Bus", "gas for industry", location="Earth", carrier="gas for industry")
-    n.madd(
-        "Bus",
-        spatial.gas.industry,
-        location=spatial.gas.locations,
-        carrier="gas for industry",
-    )
+    gas_demand_by_subsector = industrial_demand_by_subsector["gas"].loc[spatial.nodes]
 
-    gas_demand = industrial_demand.loc[spatial.nodes, "gas"] / 8760.0
+    gas_supply_buses = spatial.gas.df.loc[spatial.nodes, "nodes"].to_numpy()
+    co2_storage_buses = spatial.co2.df.loc[spatial.nodes, "nodes"].to_numpy()
 
-    if options["gas"]["spatial_gas"]:
-        spatial_gas_demand = gas_demand.rename(index=lambda x: x + " gas for industry")
-    else:
-        spatial_gas_demand = gas_demand.sum()
+    for subsector in gas_demand_by_subsector.columns:
+        demand = gas_demand_by_subsector[subsector]
 
-    n.madd(
-        "Load",
-        spatial.gas.industry,
-        bus=spatial.gas.industry,
-        carrier="gas for industry",
-        p_set=spatial_gas_demand,
-    )
+        if demand.fillna(0.0).eq(0.0).all():
+            continue
 
-    n.madd(
-        "Link",
-        spatial.gas.industry,
-        bus0=spatial.gas.nodes,
-        bus1=spatial.gas.industry,
-        bus2="co2 atmosphere",
-        carrier="gas for industry",
-        p_nom_extendable=True,
-        efficiency=1.0,
-        efficiency2=costs.at["gas", "CO2 intensity"],
-        sector="industry",
-    )
-    if snakemake.params.sector_options["cc"]:
+        normalized_subsector = _normalize_industry_subsector(subsector)
+        gas_industry_buses = spatial.nodes + f" gas for industry {normalized_subsector}"
+
+        n.madd(
+            "Bus",
+            gas_industry_buses,
+            location=spatial.nodes,
+            carrier="gas for industry",
+        )
+
+        n.madd(
+            "Load",
+            gas_industry_buses,
+            bus=gas_industry_buses,
+            carrier="gas for industry",
+            p_set=demand.to_numpy() / 8760.0,
+        )
+        n.loads.loc[gas_industry_buses, "sector"] = "industry"
+        n.loads.loc[gas_industry_buses, "subsector"] = normalized_subsector
+
         n.madd(
             "Link",
-            spatial.gas.industry_cc,
-            bus0=spatial.gas.nodes,
-            bus1=spatial.gas.industry,
+            spatial.nodes + f" gas for industry {normalized_subsector}",
+            bus0=gas_supply_buses,
+            bus1=gas_industry_buses,
             bus2="co2 atmosphere",
-            bus3=spatial.co2.nodes,
-            carrier="gas for industry CC",
+            carrier="gas for industry",
             p_nom_extendable=True,
-            capital_cost=costs.at["cement capture", "fixed"]
-            * costs.at["gas", "CO2 intensity"],
-            efficiency=0.9,
-            efficiency2=costs.at["gas", "CO2 intensity"]
-            * (1 - costs.at["cement capture", "capture_rate"]),
-            efficiency3=costs.at["gas", "CO2 intensity"]
-            * costs.at["cement capture", "capture_rate"],
-            lifetime=costs.at["cement capture", "lifetime"],
+            efficiency=1.0,
+            efficiency2=costs.at["gas", "CO2 intensity"],
             sector="industry",
+            subsector=normalized_subsector,
         )
+
+        if snakemake.params.sector_options["cc"]:
+            n.madd(
+                "Link",
+                spatial.nodes + f" gas for industry {normalized_subsector} CC",
+                bus0=gas_supply_buses,
+                bus1=gas_industry_buses,
+                bus2="co2 atmosphere",
+                bus3=co2_storage_buses,
+                carrier="gas for industry CC",
+                p_nom_extendable=True,
+                capital_cost=costs.at["cement capture", "fixed"]
+                * costs.at["gas", "CO2 intensity"],
+                efficiency=0.9,
+                efficiency2=costs.at["gas", "CO2 intensity"]
+                * (1 - costs.at["cement capture", "capture_rate"]),
+                efficiency3=costs.at["gas", "CO2 intensity"]
+                * costs.at["cement capture", "capture_rate"],
+                lifetime=costs.at["cement capture", "lifetime"],
+                sector="industry",
+                subsector=normalized_subsector,
+            )
 
     #################################################### CARRIER = HYDROGEN
 
@@ -2076,52 +2146,69 @@ def add_industry(
         )
 
     # CARRIER = LIQUID HYDROCARBONS
-    n.madd(
-        "Load",
-        spatial.nodes,
-        suffix=" naphtha for industry",
-        bus=spatial.oil.nodes,
-        carrier="naphtha for industry",
-        p_set=industrial_demand["oil"] / 8760,
-    )
+    oil_demand_by_subsector = industrial_demand_by_subsector["oil"].loc[spatial.nodes]
+    oil_supply_buses = spatial.oil.df.loc[spatial.nodes, "nodes"].to_numpy()
+
+    for subsector in oil_demand_by_subsector.columns:
+        demand = oil_demand_by_subsector[subsector]
+
+        if demand.fillna(0.0).eq(0.0).all():
+            continue
+
+        normalized_subsector = _normalize_industry_subsector(subsector)
+        oil_loads = spatial.nodes + f" naphtha for industry {normalized_subsector}"
+
+        n.madd(
+            "Load",
+            oil_loads,
+            bus=oil_supply_buses,
+            carrier="naphtha for industry",
+            p_set=demand.to_numpy() / 8760,
+        )
+        n.loads.loc[oil_loads, "sector"] = "industry"
+        n.loads.loc[oil_loads, "subsector"] = normalized_subsector
 
     #     #NB: CO2 gets released again to atmosphere when plastics decay or kerosene is burned
     #     #except for the process emissions when naphtha is used for petrochemicals, which can be captured with other industry process emissions
     #     #tco2 per hour
     # TODO kerosene for aviation should be added too but in the right func.
-    co2_release = [" naphtha for industry"]
-    # check land transport
+    for subsector in oil_demand_by_subsector.columns:
+        demand = oil_demand_by_subsector[subsector]
 
-    oil_loads = spatial.nodes + co2_release
-    co2_by_node = (
-        pd.Series(
-            n.loads.loc[oil_loads, "p_set"].to_numpy(),
-            index=spatial.nodes,
+        if demand.fillna(0.0).eq(0.0).all():
+            continue
+
+        normalized_subsector = _normalize_industry_subsector(subsector)
+        co2_by_node = demand * costs.at["oil", "CO2 intensity"] / 8760
+
+        _add_country_emission_loads(
+            n,
+            co2_by_node,
+            name=f"industry oil emissions {normalized_subsector}",
+            carrier="industry oil emissions",
+            sector="industry",
+            subsector=normalized_subsector,
         )
-        * costs.at["oil", "CO2 intensity"]
-    )
 
-    _add_country_emission_loads(
-        n,
-        co2_by_node,
-        name="industry oil emissions",
-        carrier="industry oil emissions",
-        sector="industry",
-    )
+    coal_demand_by_subsector = industrial_demand_by_subsector["coal"].loc[spatial.nodes]
 
-    co2_by_node = (
-        industrial_demand.loc[spatial.nodes, "coal"]
-        * costs.at["coal", "CO2 intensity"]
-        / 8760
-    )
+    for subsector in coal_demand_by_subsector.columns:
+        demand = coal_demand_by_subsector[subsector]
 
-    _add_country_emission_loads(
-        n,
-        co2_by_node,
-        name="industry coal emissions",
-        carrier="industry coal emissions",
-        sector="industry",
-    )
+        if demand.fillna(0.0).eq(0.0).all():
+            continue
+
+        normalized_subsector = _normalize_industry_subsector(subsector)
+        co2_by_node = demand * costs.at["coal", "CO2 intensity"] / 8760
+
+        _add_country_emission_loads(
+            n,
+            co2_by_node,
+            name=f"industry coal emissions {normalized_subsector}",
+            carrier="industry coal emissions",
+            sector="industry",
+            subsector=normalized_subsector,
+        )
 
     ########################################################### CARRIER = HEAT
     # TODO simplify bus expression
@@ -2165,64 +2252,77 @@ def add_industry(
     )
 
     process_node_country = _country_for_nodes(n, spatial.nodes)
-    process_emissions_by_country = (
-        industrial_demand.loc[spatial.nodes, "process emissions"]
-        .groupby(process_node_country)
-        .sum()
-        / 8760
-    )
+    process_emissions_by_subsector = industrial_demand_by_subsector[
+        "process emissions"
+    ].loc[spatial.nodes]
 
-    process_countries = pd.Index(process_emissions_by_country.index)
-    process_buses = process_countries + " process emissions"
-
-    n.madd(
-        "Bus",
-        process_buses,
-        location=process_countries,
-        carrier="process emissions",
-    )
-    n.buses.loc[process_buses, "country"] = process_countries.to_numpy()
-
-    n.madd(
-        "Load",
-        process_buses,
-        bus=process_buses,
-        carrier="process emissions",
-        p_set=-process_emissions_by_country.to_numpy(),
-    )
-
-    n.madd(
-        "Link",
-        process_buses,
-        bus0=process_buses,
-        bus1="co2 atmosphere",
-        carrier="process emissions",
-        p_nom_extendable=True,
-        efficiency=1.0,
-        sector="industry_process_emissions",
-        subsector="",
-    )
-
-    # assume enough local waste heat for CC
     if snakemake.params.sector_options["cc"]:
         co2_location_country = _country_for_nodes(n, spatial.co2.locations)
 
+    for subsector in process_emissions_by_subsector.columns:
+        emissions = process_emissions_by_subsector[subsector]
+
+        if emissions.fillna(0.0).eq(0.0).all():
+            continue
+
+        normalized_subsector = _normalize_industry_subsector(subsector)
+
+        emissions_by_country = emissions.groupby(process_node_country).sum() / 8760
+        process_countries = pd.Index(emissions_by_country.index)
+        process_buses = process_countries + f" process emissions {normalized_subsector}"
+
+        n.madd(
+            "Bus",
+            process_buses,
+            location=process_countries,
+            carrier="process emissions",
+        )
+        n.buses.loc[process_buses, "country"] = process_countries.to_numpy()
+
+        n.madd(
+            "Load",
+            process_buses,
+            bus=process_buses,
+            carrier="process emissions",
+            p_set=-emissions_by_country.to_numpy(),
+        )
+        n.loads.loc[process_buses, "sector"] = "industry_process_emissions"
+        n.loads.loc[process_buses, "subsector"] = normalized_subsector
+
         n.madd(
             "Link",
-            spatial.co2.locations,
-            suffix=" process emissions CC",
-            bus0=(co2_location_country + " process emissions").to_numpy(),
+            process_buses,
+            bus0=process_buses,
             bus1="co2 atmosphere",
-            bus2=spatial.co2.nodes,
-            carrier="process emissions CC",
+            carrier="process emissions",
             p_nom_extendable=True,
-            capital_cost=costs.at["cement capture", "fixed"],
-            efficiency=1 - costs.at["cement capture", "capture_rate"],
-            efficiency2=costs.at["cement capture", "capture_rate"],
-            lifetime=costs.at["cement capture", "lifetime"],
+            efficiency=1.0,
             sector="industry_process_emissions",
-            subsector="",
+            subsector=normalized_subsector,
         )
+
+        # assume enough local waste heat for CC
+        if snakemake.params.sector_options["cc"]:
+            cc_bus0 = (
+                co2_location_country + f" process emissions {normalized_subsector}"
+            ).to_numpy()
+
+            n.madd(
+                "Link",
+                spatial.co2.locations,
+                suffix=f" process emissions {normalized_subsector} CC",
+                bus0=cc_bus0,
+                bus1="co2 atmosphere",
+                bus2=spatial.co2.nodes,
+                carrier="process emissions CC",
+                p_nom_extendable=True,
+                capital_cost=costs.at["cement capture", "fixed"],
+                efficiency=1 - costs.at["cement capture", "capture_rate"],
+                efficiency2=costs.at["cement capture", "capture_rate"],
+                lifetime=costs.at["cement capture", "lifetime"],
+                sector="industry_process_emissions",
+                subsector=normalized_subsector,
+            )
 
 
 def add_ammonia(
@@ -4094,6 +4194,7 @@ if __name__ == "__main__":
             n,
             costs,
             industrial_demand_fn=snakemake.input.industrial_demand,
+            industrial_demand_by_subsector_fn=snakemake.input.industrial_demand_by_subsector,
         )
 
     if options["ammonia"]["enable"]:
