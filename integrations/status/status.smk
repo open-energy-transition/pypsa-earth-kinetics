@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 import hashlib
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -79,9 +80,16 @@ if STATUS_ENABLED:
                 exist_ok=True,
             )
 
+            conda_executable = os.environ.get("CONDA_EXE") or shutil.which("conda")
+            if conda_executable is None:
+                raise FileNotFoundError(
+                    "Could not find the Conda executable. "
+                    "Neither CONDA_EXE nor a conda executable in PATH is available."
+                )
+
             subprocess.run(
                 [
-                    "conda",
+                    conda_executable,
                     "env",
                     "create",
                     "--prefix",

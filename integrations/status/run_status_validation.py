@@ -13,6 +13,7 @@ PyPSA-Earth-Status is executed from a temporary copy of the pinned submodule
 so that validation outputs do not modify the submodule working tree.
 """
 
+import os
 import shutil
 import subprocess
 import tempfile
@@ -59,6 +60,13 @@ if not network_path.exists():
     )
 
 output_path.parent.mkdir(parents=True, exist_ok=True)
+
+conda_executable = os.environ.get("CONDA_EXE") or shutil.which("conda")
+if conda_executable is None:
+    raise FileNotFoundError(
+        "Could not find the Conda executable. "
+        "Neither CONDA_EXE nor a conda executable in PATH is available."
+    )
 
 with tempfile.TemporaryDirectory(prefix="pypsa-earth-status-") as temporary_directory:
     status_workdir = Path(temporary_directory) / "pypsa-earth-status"
@@ -110,7 +118,7 @@ with tempfile.TemporaryDirectory(prefix="pypsa-earth-status-") as temporary_dire
 
     run_command(
         [
-            "conda",
+            conda_executable,
             "run",
             "--prefix",
             str(status_environment_prefix),
