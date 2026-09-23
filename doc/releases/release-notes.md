@@ -10,13 +10,23 @@ This part of documentation collects descriptive release notes to capture the mai
 
 **New Features and Major Changes**
 
+* Add a command line interface (CLI) to help beginners to PyPSA-Earth to navigate through the model [PR #1959](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1959)
+
 * Support country-specific mappings and custom transmission line types [PR # 1933](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1933)
 
 **Minor Changes and bug-fixing**
 
+* Represent fixed sector emissions as time-dependent loads [PR #2027](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2027)
+
+* Normalize OSM network indices before assigning line endpoints [PR #2038](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2038)
+
+* Preserve industry subsector detail in nodal demand [PR #2040](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2040)
+
 * Fix fallback to closest available CO2 emission year [PR #2018](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2018)
 
 * Update guidance on creating a new release [PR #2002](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2002)
+
+* Align sector technology cost selection with the configured foresight mode. [PR #2024](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2024)
 
 # PyPSA-Earth 0.9.0
 
@@ -71,6 +81,13 @@ This part of documentation collects descriptive release notes to capture the mai
 * Reorganize config for ``co2``, ``solar_thermal``, and line length settings. Old config keys will be deprecated in future releases [PR #1863](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1863)
 
 **Minor Changes and bug-fixing**
+
+* Retry failed databundle downloads before falling back to the next configured host [PR #2013](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2013)
+
+* Fix country lookup for country-specific line type mappings [PR #2037](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2037)
+
+* Fix `shared_cutouts` logic [PR #2003](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2003)
+
 * Fix invalid biomass transport and CO2 pipeline connections [PR #1987](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1987)
 
 * Attach existing batteries as ``StorageUnit`` rather than Store+Link, so extra battery buses do not inflate the minimum cluster count during simplify/cluster [PR #1990](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1990)
@@ -94,8 +111,6 @@ This part of documentation collects descriptive release notes to capture the mai
 * Pin atlite to 0.4.1 in Pixi [PR #1935](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1935)
 
 * Replace hydrobasins for CI testing with a dataset created by Brigham Young University [PR #1944](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1944)
-
-* Fix `shared_cutouts` logic [PR #2003](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2003)
 
 * Add `custom_powerplants` into params to make sure change of the config reruns the workflow [PR #1927](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1927)
 
