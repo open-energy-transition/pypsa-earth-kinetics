@@ -155,8 +155,8 @@ costs:
     coal: 0.41 # METI
 
 co2:
-  limit: 9.348e+8     # annual cap [tCO2/year]; European default — adjust for your region; active via Co2L wildcard
-  base: 4.465e+8     # baseline emissions used for relative reduction targets; European default
+  limit: 9.348e+8     # annual cap [tCO2/year], https://www.iea.org/countries/japan/emissions
+  base: 4.465e+8     # power sector emissions JP 2023, https://www.iea.org/countries/japan/emissions
   emission_price: 0. # [currency/tCO2]; active via Ep wildcard
   automatic_emission: # derive co2.limit from historical emission data instead of the value above
     enable: false
