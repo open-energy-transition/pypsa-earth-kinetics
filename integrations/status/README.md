@@ -7,6 +7,13 @@ PyPSA-Earth-Status is included as a Git submodule under:
 
     submodules/pypsa-earth-status
 
+The submodule points to the PyPSA-Earth-KINETICS integration fork:
+
+    https://github.com/open-energy-transition/pypsa-earth-status-kinetics
+
+This fork can temporarily host changes required by PyPSA-Earth-KINETICS before
+they are proposed to the upstream PyPSA-Earth-Status repository.
+
 The PyPSA-Earth-KINETICS models' configuration is authoritative for validation:
 
 - countries are taken from `config["countries"]`;
