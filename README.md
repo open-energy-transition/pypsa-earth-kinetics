@@ -142,6 +142,52 @@ There are multiple ways to get involved and learn more about our work:
    Java HotSpot(TM) 64-Bit Server VM (build 25.341-b10, mixed mode)
    ```
 
+## PyPSA-Earth-Status validation
+
+PyPSA-Earth-KINETICS integrates [PyPSA-Earth-Status](https://github.com/pypsa-meets-earth/pypsa-earth-status) to validate solved networks against historical reference data.
+
+PyPSA-Earth-Status is included as a Git submodule. After cloning the repository, initialize it with:
+
+```bash
+git submodule update --init --recursive
+```
+
+The submodule points to the dedicated integration fork:
+
+    https://github.com/open-energy-transition/pypsa-earth-status-kinetics
+
+while the canonical upstream repository remains:
+
+    https://github.com/pypsa-meets-earth/pypsa-earth-status
+
+Validation is enabled by default and configured in `configs/validation.default.yaml`. Countries are inherited from the resolved PyPSA-Earth-KINETICS configuration, while the historical comparison year is set through `validation.reference_year`.
+
+With Conda:
+
+```bash
+conda activate pypsa-earth
+snakemake -j 1 solve_all_networks
+```
+
+With Pixi:
+
+```bash
+pixi run -e pypsa-earth snakemake -j 1 solve_all_networks
+```
+
+PyPSA-Earth-Status is handled automatically by the workflow and does not require manual environment activation. Its dedicated environment is created and cached under `.snakemake/status/`. This also happens automatically when PyPSA-Earth-KINETICS is launched with Pixi; Conda only needs to be available on the system because it is currently used internally to create the Status environment.
+
+Electricity validation results are written under:
+
+    results/<run>/validation/status/electricity/
+
+Validation can be disabled with:
+
+```yaml
+validation:
+  enable: false
+```
+
 ## Running the model in previous versions
 
 The model can be run in previous versions by checking out the respective tag. For instance, to run the model in version 0.9.0, which is the last version before the recent PyPSA update, the following command can be used:
