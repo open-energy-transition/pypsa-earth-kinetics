@@ -63,6 +63,10 @@ electricity:
     - data/custom_powerplants_US.csv
     method: replace # false: use only powerplantmatching data; merge: combine both sources; replace: use only custom data
 
+  # ----------------- Grid topology -------------------
+lines:
+  use_country_specific_types: true
+
 # Costs Configuration
 costs:
   year: 2020 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020

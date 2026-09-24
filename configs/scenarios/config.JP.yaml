@@ -82,21 +82,6 @@ electricity:
   agg_p_nom_limits: # enables to set country-wise maximum and minimum generation capacities for generators (e.g. renewables, nuclear, and geothermal)
     file: data/agg_p_nom_minmax.csv # path to csv file containing country-wise generation capacity limits
     include_existing: false # false: only new built capacities are constrained; true: existing capacities are accounted in the constraints
-lines:
-  ac_types:
-    132.: "243-AL1/39-ST1A 20.0"
-    220.: "Al/St 240/40 2-bundle 220.0"
-    300.: "Al/St 240/40 3-bundle 300.0"
-    380.: "Al/St 240/40 4-bundle 380.0"
-    500.: "Al/St 240/40 4-bundle 380.0"
-    750.: "Al/St 560/50 4-bundle 750.0"
-  dc_types:
-    500.: "HVDC XLPE 1000"
-  s_max_pu: 0.7
-  s_nom_max: .inf
-  s_nom_max_min: -.inf
-  length_factor: 1.25
-  under_construction: "zero" # 'zero': set capacity to zero, 'remove': remove, 'keep': with full capacity
 
 # ------------------- Costs & emissions -------------------
 costs:
