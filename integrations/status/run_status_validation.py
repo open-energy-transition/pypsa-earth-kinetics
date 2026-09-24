@@ -45,6 +45,7 @@ output_path = Path(snakemake.output.health_status).resolve()
 log_path = Path(snakemake.log[0]).resolve()
 
 year = int(snakemake.params.year)
+validation_name = str(snakemake.params.validation_name)
 countries = list(snakemake.params.countries)
 scenario_key = str(snakemake.params.scenario_key)
 status_environment_prefix = Path(snakemake.params.status_environment_prefix).resolve()
@@ -87,7 +88,7 @@ with tempfile.TemporaryDirectory(prefix="pypsa-earth-status-") as temporary_dire
 
     validation_config = status_config["network_validation"]
 
-    validation_config["name"] = ""
+    validation_config["name"] = validation_name
     validation_config["network_path"] = str(network_path)
     validation_config["countries"] = countries
     validation_config["year"] = [year]

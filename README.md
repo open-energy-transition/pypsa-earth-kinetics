@@ -160,7 +160,7 @@ while the canonical upstream repository remains:
 
     https://github.com/pypsa-meets-earth/pypsa-earth-status
 
-Validation is enabled by default and configured in `configs/validation.default.yaml`. Countries are inherited from the resolved PyPSA-Earth-KINETICS configuration, while the historical comparison year is set through `validation.reference_year`.
+Validation is enabled by default and configured in `configs/validation_config.yaml`. Countries are inherited from the resolved PyPSA-Earth-KINETICS configuration, while the historical comparison year is set through `validation.reference_year`.
 
 With Conda:
 
@@ -177,9 +177,25 @@ pixi run -e pypsa-earth snakemake -j 1 solve_all_networks
 
 PyPSA-Earth-Status is handled automatically by the workflow and does not require manual environment activation. Its dedicated environment is created and cached under `.snakemake/status/`. This also happens automatically when PyPSA-Earth-KINETICS is launched with Pixi; Conda only needs to be available on the system because it is currently used internally to create the Status environment.
 
-Electricity validation results are written under:
+Validation results are stored alongside the corresponding PyPSA-Earth-KINETICS
+run. The validation folder name is derived automatically from the planning
+horizon and reference year.
 
-    results/<run>/validation/status/electricity/
+For a historical validation, where the planning horizon matches the reference
+year, results are stored for example under:
+
+    results/<run-name>/validation/historical_2023/run_001/
+
+For a future planning horizon compared against historical reference data, the
+two years are included explicitly:
+
+    results/<run-name>/validation/2030_vs_2023/run_001/
+
+Each new validation execution is stored in the next numbered directory
+(`run_001`, `run_002`, and so on), so previous validation results are preserved.
+
+If `run.name` is empty, the validation directory is created directly under
+`results/`.
 
 Validation can be disabled with:
 

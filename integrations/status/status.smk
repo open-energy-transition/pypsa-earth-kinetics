@@ -4,6 +4,7 @@
 
 import hashlib
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -18,6 +19,42 @@ STATUS_REPOSITORY = STATUS_CONFIG.get(
 )
 
 STATUS_REFERENCE_YEAR = int(STATUS_CONFIG.get("reference_year", 2023))
+
+STATUS_PLANNING_HORIZONS = config.get("scenario", {}).get(
+    "planning_horizons",
+    [],
+)
+if not isinstance(STATUS_PLANNING_HORIZONS, (list, tuple)):
+    STATUS_PLANNING_HORIZONS = [STATUS_PLANNING_HORIZONS]
+
+if STATUS_ENABLED:
+    if len(STATUS_PLANNING_HORIZONS) != 1:
+        raise ValueError(
+            "PyPSA-Earth-Status electricity validation requires exactly one "
+            "scenario.planning_horizons value."
+        )
+
+    STATUS_PLANNING_HORIZON = int(STATUS_PLANNING_HORIZONS[0])
+
+    if STATUS_PLANNING_HORIZON == STATUS_REFERENCE_YEAR:
+        STATUS_VALIDATION_LABEL = f"historical_{STATUS_REFERENCE_YEAR}"
+    else:
+        STATUS_VALIDATION_LABEL = (
+            f"{STATUS_PLANNING_HORIZON}_vs_{STATUS_REFERENCE_YEAR}"
+        )
+
+    status_validation_root = (
+        Path("results") / RDIR / "validation" / STATUS_VALIDATION_LABEL
+    )
+
+    existing_runs = []
+    if status_validation_root.exists():
+        for path in status_validation_root.iterdir():
+            match = re.fullmatch(r"run_(\d+)", path.name)
+            if path.is_dir() and match:
+                existing_runs.append(int(match.group(1)))
+
+    STATUS_RUN_NAME = f"run_{max(existing_runs, default=0) + 1:03d}"
 
 
 if STATUS_ENABLED:
@@ -53,7 +90,11 @@ def electricity_status_outputs():
     return expand(
         "results/"
         + RDIR
-        + "validation/status/electricity/"
+        + "validation/"
+        + STATUS_VALIDATION_LABEL
+        + "/"
+        + STATUS_RUN_NAME
+        + "/"
         + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.csv",
         simpl=config["scenario"]["simpl"],
         clusters=config["scenario"]["clusters"],
@@ -113,7 +154,11 @@ if STATUS_ENABLED:
             health_status=(
                 "results/"
                 + RDIR
-                + "validation/status/electricity/"
+                + "validation/"
+                + STATUS_VALIDATION_LABEL
+                + "/"
+                + STATUS_RUN_NAME
+                + "/"
                 + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.csv"
             ),
         params:
@@ -121,12 +166,17 @@ if STATUS_ENABLED:
             status_environment_prefix=STATUS_ENVIRONMENT_PREFIX,
             countries=config["countries"],
             year=STATUS_REFERENCE_YEAR,
+            validation_name=(STATUS_VALIDATION_LABEL + "_" + STATUS_RUN_NAME),
             scenario_key=_electricity_scenario_key,
         log:
             (
                 "logs/"
                 + RDIR
-                + "validation/status/electricity/"
+                + "validation/"
+                + STATUS_VALIDATION_LABEL
+                + "/"
+                + STATUS_RUN_NAME
+                + "/"
                 + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.log"
             ),
         script:
