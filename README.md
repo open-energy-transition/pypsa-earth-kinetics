@@ -184,12 +184,12 @@ horizon and reference year.
 For a historical validation, where the planning horizon matches the reference
 year, results are stored for example under:
 
-    results/<run-name>/validation/historical_2023/run_001/
+    results/<kinetics-run-name>/validation/historical_2023/run_001/
 
 For a future planning horizon compared against historical reference data, the
 two years are included explicitly:
 
-    results/<run-name>/validation/2030_vs_2023/run_001/
+    results/<kinetics-run-name>/validation/2030_vs_2023/run_001/
 
 Each new validation execution is stored in the next numbered directory
 (`run_001`, `run_002`, and so on), so previous validation results are preserved.
