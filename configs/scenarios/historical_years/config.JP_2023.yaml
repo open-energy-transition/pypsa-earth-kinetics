@@ -21,11 +21,11 @@ run:
 
 scenario:
   simpl: [""]
-  ll: ["vopt"]
+  ll: ["v1"]
   clusters: [100]
   opts: [Co2L-3h] # hyphen-joined options: 3h/6h/24h/Nseg temporal | Co2L/Ep/CH4L caps & prices | ATK/ATKc autarky | {carrier}+p/c/m scale | CCL/BAU/SAFE/RES/EQ solve constraints — see doc/user-guide/wildcards.md
   planning_horizons: # investment years for myopic; costs year for overnight
-  - 2030
+  - 2023
   sopts:
   - "3h"
 
@@ -58,9 +58,18 @@ load_options:
   scale: 1 # scales all load time-series, i.e. 2 = doubles load
 
 # ------------------- Electricity grid -------------------
+
+  # ----------------- Electricity generation -------------------
+  extendable_carriers:
+    Generator: [] # Remove 'offwind-ac' and 'offwind-dc' for landlocked countries (e.g., Jordan, Austria, Switzerland)
+    StorageUnit: [] # battery, H2, li-ion, vanadium, lfp, lair, pair, iron-air and more
+    Store: [] # li-ion, vanadium, lfp, lair, pair, iron-air and more
+    # See all available options for Store and StorageUnit in https://pypsa-earth.readthedocs.io/en/latest/user-guide/configuration/#storage-technologies
+    Link: [] # H2 pipeline
+
 electricity:
   # ----------------- Existing powerplants -------------------
-  powerplants_filter: (DateOut >= 2030 or DateOut != DateOut) and (DateIn <= 2030 or DateIn != DateIn)
+  powerplants_filter: (DateOut >= 2023 or DateOut != DateOut) and (DateIn <= 2023 or DateIn != DateIn)
   custom_powerplants:
     filepaths:  # list of custom powerplant files used in "merge" and "replace" options
     - data/custom_powerplants_JP.csv
@@ -85,7 +94,7 @@ electricity:
 
 # ------------------- Costs & emissions -------------------
 costs:
-  year: 2030 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020
+  year: 2020 # cost file selection, i.e. costs_2030.csv in this case; reference year for costs is always 2020
   technology_data_version: v0.15.0
   discountrate: [0.071] #, 0.086, 0.111]
   country_specific_data: "" # (optional) Reference to the desired technology-data directory for techno-economic input data; Only "" and "US" supported, for other values check the technology-data output directory
@@ -135,9 +144,11 @@ costs:
   # lifetime: # years
   #   CCGT: 25.0
   efficiency: # per unit
+    CCGT: 0.48 # METI
+    oil: 0.38 # METI
+    coal: 0.41 # METI
 
 co2:
-  # TODO: update CO2 limit
   limit: 9.348e+8     # annual cap [tCO2/year], https://www.iea.org/countries/japan/emissions
   base: 4.465e+8     # power sector emissions JP 2023, https://www.iea.org/countries/japan/emissions
   emission_price: 0. # [currency/tCO2]; active via Ep wildcard
