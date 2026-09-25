@@ -162,40 +162,52 @@ while the canonical upstream repository remains:
 
 Validation is enabled by default and configured in `configs/validation_config.yaml`. Countries are inherited from the resolved PyPSA-Earth-KINETICS configuration, while the historical comparison year is set through `validation.reference_year`.
 
-With Conda:
+Validation is triggered automatically when either the electricity-only or sector-coupled solve target is executed:
 
 ```bash
-conda activate pypsa-earth
 snakemake -j 1 solve_all_networks
+snakemake -j 1 solve_sector_networks
 ```
 
-With Pixi:
+The same integration works with scenario-specific configuration files, for example:
 
 ```bash
-pixi run -e pypsa-earth snakemake -j 1 solve_all_networks
+snakemake -j 1 solve_all_networks --configfile configs/scenarios/config.example.yaml
+snakemake -j 1 solve_sector_networks --configfile configs/scenarios/config.example.yaml
 ```
+
+No PyPSA-Earth-Status-specific settings are required in individual scenario configuration files.
 
 PyPSA-Earth-Status is handled automatically by the workflow and does not require manual environment activation. Its dedicated environment is created and cached under `.snakemake/status/`. This also happens automatically when PyPSA-Earth-KINETICS is launched with Pixi; Conda only needs to be available on the system because it is currently used internally to create the Status environment.
 
-Validation results are stored alongside the corresponding PyPSA-Earth-KINETICS
-run. The validation folder name is derived automatically from the planning
-horizon and reference year.
+PyPSA-Earth-Status runs directly from the pinned Git submodule and stores the standard `visualize_data` outputs under:
 
-For a historical validation, where the planning horizon matches the reference
-year, results are stored for example under:
+    submodules/pypsa-earth-status/results/
 
-    results/<kinetics-run-name>/validation/historical_2023/run_001/
+Results are separated by model year, historical reference year, validation execution, and solved network.
 
-For a future planning horizon compared against historical reference data, the
-two years are included explicitly:
+When the model year matches the configured reference year, for example 2023, results are stored under:
 
-    results/<kinetics-run-name>/validation/2030_vs_2023/run_001/
+    submodules/pypsa-earth-status/results/historical_2023/run_001/<network>/
 
-Each new validation execution is stored in the next numbered directory
-(`run_001`, `run_002`, and so on), so previous validation results are preserved.
+For another model year compared with the 2023 historical reference data, for example 2030:
 
-If `run.name` is empty, the validation directory is created directly under
-`results/`.
+    submodules/pypsa-earth-status/results/2030_vs_2023/run_001/<network>/
+
+Each network directory contains the standard PyPSA-Earth-Status validation outputs produced by `visualize_data`, including:
+
+    figures/
+    tables/
+    network_comparison.geojson
+
+Sector-coupled runs support multiple planning horizons in the same workflow. Each solved postnetwork is validated independently and stored under the corresponding year label.
+
+For example, a run with planning horizons 2023 and 2030 produces separate validation results under:
+
+    submodules/pypsa-earth-status/results/historical_2023/run_001/
+    submodules/pypsa-earth-status/results/2030_vs_2023/run_001/
+
+Each new validation execution uses the next numbered directory (`run_001`, `run_002`, and so on), preserving previous validation results.
 
 Validation can be disabled with:
 

@@ -3,14 +3,16 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 """
-Run the standard PyPSA-Earth-Status validation workflow for a solved
+Run PyPSA-Earth-Status directly from its submodule for a solved
 PyPSA-Earth-KINETICS network.
 
-PyPSA-Earth-Status is executed from a temporary copy of the pinned submodule.
-The complete Status validation results directory is then copied back into the
-PyPSA-Earth-KINETICS results directory.
+The KINETICS network, countries, reference year, validation name, and OSM grid
+path are injected through a temporary Status configuration. The standard
+PyPSA-Earth-Status ``visualize_data`` workflow then writes its normal outputs
+directly to the submodule's results directory.
 """
 
+import fcntl
 import os
 import shutil
 import subprocess
@@ -21,7 +23,7 @@ import yaml
 
 
 def run_command(command, cwd, log_path):
-    """Run a command and redirect stdout and stderr to the rule log."""
+    """Run a command and redirect stdout and stderr to the wrapper log."""
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
     with log_path.open("w") as stream:
@@ -38,10 +40,7 @@ repo_root = Path.cwd().resolve()
 
 status_repository = (repo_root / snakemake.params.status_repository).resolve()
 network_path = Path(snakemake.input.network).resolve()
-
 validation_result = Path(snakemake.output.validation_result).resolve()
-output_directory = validation_result.parents[1]
-
 log_path = Path(snakemake.log[0]).resolve()
 
 year = int(snakemake.params.year)
@@ -81,73 +80,69 @@ if conda_executable is None:
     )
 
 
-with tempfile.TemporaryDirectory(prefix="pypsa-earth-status-") as temporary_directory:
-    status_workdir = Path(temporary_directory) / "pypsa-earth-status"
+status_config_path = status_repository / "config.yaml"
 
-    shutil.copytree(
-        status_repository,
-        status_workdir,
-        ignore=shutil.ignore_patterns(".git"),
-    )
+with status_config_path.open() as stream:
+    status_config = yaml.safe_load(stream)
 
-    status_config_path = status_workdir / "config.yaml"
+validation_config = status_config["network_validation"]
 
-    with status_config_path.open() as stream:
-        status_config = yaml.safe_load(stream)
+validation_config["name"] = validation_name
+validation_config["network_path"] = str(network_path)
+validation_config["countries"] = countries
+validation_config["year"] = [year]
 
-    validation_config = status_config["network_validation"]
+status_config["plot_osm_grid_network"]["grid_path"] = str(osm_grid_path)
 
-    validation_config["name"] = validation_name
-    validation_config["network_path"] = str(network_path)
-    validation_config["countries"] = countries
-    validation_config["year"] = [year]
 
-    status_config["plot_osm_grid_network"]["grid_path"] = str(osm_grid_path)
+temporary_config = None
 
-    with status_config_path.open("w") as stream:
+try:
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".yaml",
+        prefix=".kinetics-validation-",
+        dir=status_repository,
+        delete=False,
+    ) as stream:
         yaml.safe_dump(
             status_config,
             stream,
             sort_keys=False,
         )
+        temporary_config = Path(stream.name)
 
-    status_results = status_workdir / "results" / validation_name
+    lock_path = repo_root / ".snakemake/status/validation.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if status_results.exists():
-        shutil.rmtree(status_results)
+    with lock_path.open("w") as lock_stream:
+        fcntl.flock(lock_stream, fcntl.LOCK_EX)
 
-    run_command(
-        [
-            conda_executable,
-            "run",
-            "--prefix",
-            str(status_environment_prefix),
-            "snakemake",
-            "-j",
-            "1",
-            "visualize_data",
-            "--rerun-incomplete",
-        ],
-        cwd=status_workdir,
-        log_path=log_path,
-    )
-
-    if not status_results.exists():
-        raise FileNotFoundError(
-            "PyPSA-Earth-Status did not produce the expected results "
-            f"directory: {status_results}"
+        run_command(
+            [
+                conda_executable,
+                "run",
+                "--prefix",
+                str(status_environment_prefix),
+                "snakemake",
+                "-j",
+                "1",
+                "--configfile",
+                str(temporary_config),
+                "--rerun-incomplete",
+                "visualize_data",
+            ],
+            cwd=status_repository,
+            log_path=log_path,
         )
 
-    if output_directory.exists():
-        shutil.rmtree(output_directory)
+finally:
+    if temporary_config is not None:
+        temporary_config.unlink(missing_ok=True)
 
-    shutil.copytree(
-        status_results,
-        output_directory,
+
+if not validation_result.exists():
+    raise FileNotFoundError(
+        "PyPSA-Earth-Status did not produce the expected validation result: "
+        f"{validation_result}"
     )
-
-    if not validation_result.exists():
-        raise FileNotFoundError(
-            "Expected PyPSA-Earth-Status validation output was not produced: "
-            f"{validation_result}"
-        )

@@ -1250,12 +1250,13 @@ rule prepare_sector_networks:
 
 rule solve_sector_networks:
     input:
-        expand(
+        networks=expand(
             RESDIR
             + "postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}.nc",
             **config["scenario"],
             **config["costs"],
         ),
+        validation=sector_status_outputs(),
 
 
 rule prepare_ports:
