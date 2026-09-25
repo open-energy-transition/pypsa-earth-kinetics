@@ -10,7 +10,7 @@ This part of documentation collects descriptive release notes to capture the mai
 
 **New Features and Major Changes**
 
-* Add representative Japan-specific transmission line types [PR #42](https://github.com/open-energy-transition/pypsa-earth-kinetics/pull/42)
+* Add representative Japan-specific transmission line types [PR #2047](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2047)
 
 * Add a command line interface (CLI) to help beginners to PyPSA-Earth to navigate through the model [PR #1959](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1959)
 
