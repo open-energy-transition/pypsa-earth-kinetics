@@ -74,7 +74,7 @@ electricity:
   #   method: merge
 
   # ----------------- Grid topology -------------------
-  base_voltage: 380.
+  base_voltage: 500.
   voltages: [132., 220., 300., 380., 500., 750.]
   hvdc_as_lines: false # false: HVDC as Link; true: HVDC as Line
 
@@ -82,6 +82,9 @@ electricity:
   agg_p_nom_limits: # enables to set country-wise maximum and minimum generation capacities for generators (e.g. renewables, nuclear, and geothermal)
     file: data/agg_p_nom_minmax.csv # path to csv file containing country-wise generation capacity limits
     include_existing: false # false: only new built capacities are constrained; true: existing capacities are accounted in the constraints
+
+lines:
+  use_country_specific_types: true
 
 # ------------------- Costs & emissions -------------------
 costs:
