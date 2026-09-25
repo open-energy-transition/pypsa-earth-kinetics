@@ -95,7 +95,8 @@ def electricity_status_outputs():
         + "/"
         + STATUS_RUN_NAME
         + "/"
-        + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.csv",
+        + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}/"
+        + "figures/grid_network.png",
         simpl=config["scenario"]["simpl"],
         clusters=config["scenario"]["clusters"],
         ll=config["scenario"]["ll"],
@@ -151,7 +152,7 @@ if STATUS_ENABLED:
             ),
             status_environment=STATUS_ENVIRONMENT_MARKER,
         output:
-            health_status=(
+            validation_result=(
                 "results/"
                 + RDIR
                 + "validation/"
@@ -159,7 +160,8 @@ if STATUS_ENABLED:
                 + "/"
                 + STATUS_RUN_NAME
                 + "/"
-                + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.csv"
+                + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}/"
+                + "figures/grid_network.png"
             ),
         params:
             status_repository=STATUS_REPOSITORY,
@@ -168,6 +170,7 @@ if STATUS_ENABLED:
             year=STATUS_REFERENCE_YEAR,
             validation_name=(STATUS_VALIDATION_LABEL + "_" + STATUS_RUN_NAME),
             scenario_key=_electricity_scenario_key,
+            osm_grid_path="resources/" + RDIR + "osm/clean",
         log:
             (
                 "logs/"
