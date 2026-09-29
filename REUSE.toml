@@ -96,3 +96,9 @@ path = "configs/policy/co2_sector_limits.template.csv"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "The PyPSA-Earth and PyPSA-Eur Authors"
 SPDX-License-Identifier = "CC-BY-4.0"
+
+[[annotations]]
+path = "configs/policy/co2_sector_limits_jp.csv"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "The PyPSA-Earth and PyPSA-Eur Authors"
+SPDX-License-Identifier = "CC0-1.0"
