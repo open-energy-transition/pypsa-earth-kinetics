@@ -90,15 +90,12 @@ if STATUS_ENABLED:
 if STATUS_ENABLED:
     STATUS_ENVIRONMENT_FILE = Path(STATUS_REPOSITORY) / "envs/environment.yaml"
 
-    if not STATUS_ENVIRONMENT_FILE.exists():
-        raise FileNotFoundError(
-            "PyPSA-Earth-Status environment file not found. "
-            "Make sure the Git submodule is initialized."
-        )
-
-    STATUS_ENVIRONMENT_HASH = hashlib.sha256(
-        STATUS_ENVIRONMENT_FILE.read_bytes()
-    ).hexdigest()[:12]
+    if STATUS_ENVIRONMENT_FILE.exists():
+        STATUS_ENVIRONMENT_HASH = hashlib.sha256(
+            STATUS_ENVIRONMENT_FILE.read_bytes()
+        ).hexdigest()[:12]
+    else:
+        STATUS_ENVIRONMENT_HASH = "uninitialized"
 
     STATUS_ENVIRONMENT_PREFIX = f".snakemake/status/conda/{STATUS_ENVIRONMENT_HASH}"
     STATUS_ENVIRONMENT_MARKER = f".snakemake/status/env-{STATUS_ENVIRONMENT_HASH}.ready"
