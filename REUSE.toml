@@ -98,7 +98,19 @@ SPDX-FileCopyrightText = "The PyPSA-Earth and PyPSA-Eur Authors"
 SPDX-License-Identifier = "CC-BY-4.0"
 
 [[annotations]]
-path = "configs/policy/co2_sector_limits_jp.csv"
+path = "configs/policy/co2_sector_limits_jp_gw_plan2025.csv"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "The PyPSA-Earth and PyPSA-Eur Authors"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "configs/policy/co2_sector_limits_jp_iea_emissions.csv"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "The PyPSA-Earth and PyPSA-Eur Authors"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "configs/policy/co2_sector_limits_jp_indc2015.csv"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "The PyPSA-Earth and PyPSA-Eur Authors"
 SPDX-License-Identifier = "CC0-1.0"
