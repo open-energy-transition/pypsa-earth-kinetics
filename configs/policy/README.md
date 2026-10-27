@@ -3,9 +3,9 @@ SPDX-FileCopyrightText: 2026 Open Energy Transition gGmbH
 SPDX-License-Identifier: CC-BY-4.0
 -->
 
-# CO₂ policy data sources
+# CO2 policy data sources
 
-This file lists the sources used for the country-specific CO₂ policy CSV files in this directory.
+This file lists the sources used for the country-specific CO2 policy CSV files in this directory.
 
 | Country | CSV file | Source |
 |---|---|---|
