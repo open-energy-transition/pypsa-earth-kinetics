@@ -601,8 +601,8 @@ if config["enable"].get("retrieve_cost_data", True):
 
     checkpoint retrieve_technology_data_config:
         input:
-            HTTP.remote(
-                f"raw.githubusercontent.com/PyPSA/technology-data/{config['costs']['technology_data_version']}/config.yaml",
+            storage.http(
+                f"https://raw.githubusercontent.com/PyPSA/technology-data/{config['costs']['technology_data_version']}/config.yaml",
                 keep_local=True,
             ),
         output:
