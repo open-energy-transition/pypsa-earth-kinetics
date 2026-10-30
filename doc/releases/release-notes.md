@@ -18,6 +18,8 @@ This part of documentation collects descriptive release notes to capture the mai
 
 **Minor Changes and bug-fixing**
 
+* Fix connection cost calculations during network simplification by preserving zero-cost AC connections and correctly accounting for HVDC links and lines [PR #2091](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2091)
+
 * Fix ambiguous Snakemake rule matching between `retrieve_cost_data` and `process_cost_data` by constraining cost-year and scope wildcards [PR #2089](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2089)
 
 * Vectorize fuel quantity conversions in sectoral energy totals and explicitly validate missing conversion factors [PR #2087](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2087)
