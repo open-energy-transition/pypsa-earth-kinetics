@@ -142,6 +142,80 @@ There are multiple ways to get involved and learn more about our work:
    Java HotSpot(TM) 64-Bit Server VM (build 25.341-b10, mixed mode)
    ```
 
+## PyPSA-Earth-Status validation
+
+PyPSA-Earth-KINETICS integrates [PyPSA-Earth-Status](https://github.com/pypsa-meets-earth/pypsa-earth-status) to validate solved networks against historical reference data.
+
+PyPSA-Earth-Status is included as a Git submodule. After cloning the repository, initialize it with:
+
+```bash
+git submodule update --init --recursive
+```
+
+The submodule points to the dedicated integration fork:
+
+    https://github.com/open-energy-transition/pypsa-earth-status-kinetics
+
+while the canonical upstream repository remains:
+
+    https://github.com/pypsa-meets-earth/pypsa-earth-status
+
+Validation is enabled by default and configured in `configs/validation_config.yaml`. Countries are inherited from the resolved PyPSA-Earth-KINETICS configuration, while the historical comparison year is set through `validation.reference_year`.
+
+Validation is triggered automatically when either the electricity-only or sector-coupled solve target is executed:
+
+```bash
+snakemake -j 1 solve_all_networks
+snakemake -j 1 solve_sector_networks
+```
+
+The same integration works with scenario-specific configuration files, for example:
+
+```bash
+snakemake -j 1 solve_all_networks --configfile configs/scenarios/config.example.yaml
+snakemake -j 1 solve_sector_networks --configfile configs/scenarios/config.example.yaml
+```
+
+No PyPSA-Earth-Status-specific settings are required in individual scenario configuration files.
+
+PyPSA-Earth-Status is handled automatically by the workflow and does not require manual environment activation. Its dedicated environment is created and cached under `.snakemake/status/`. This also happens automatically when PyPSA-Earth-KINETICS is launched with Pixi; Conda only needs to be available on the system because it is currently used internally to create the Status environment.
+
+PyPSA-Earth-Status runs directly from the pinned Git submodule and stores the standard `visualize_data` outputs under:
+
+    submodules/pypsa-earth-status/results/
+
+Results are separated by model year, historical reference year, validation execution, and solved network.
+
+When the model year matches the configured reference year, for example 2023, results are stored under:
+
+    submodules/pypsa-earth-status/results/historical_2023/run_001/<network>/
+
+For another model year compared with the 2023 historical reference data, for example 2030:
+
+    submodules/pypsa-earth-status/results/2030_vs_2023/run_001/<network>/
+
+Each network directory contains the standard PyPSA-Earth-Status validation outputs produced by `visualize_data`, including:
+
+    figures/
+    tables/
+    network_comparison.geojson
+
+Sector-coupled runs support multiple planning horizons in the same workflow. Each solved postnetwork is validated independently and stored under the corresponding year label.
+
+For example, a run with planning horizons 2023 and 2030 produces separate validation results under:
+
+    submodules/pypsa-earth-status/results/historical_2023/run_001/
+    submodules/pypsa-earth-status/results/2030_vs_2023/run_001/
+
+Each new validation execution uses the next numbered directory (`run_001`, `run_002`, and so on), preserving previous validation results.
+
+Validation can be disabled with:
+
+```yaml
+validation:
+  enable: false
+```
+
 ## Running the model in previous versions
 
 The model can be run in previous versions by checking out the respective tag. For instance, to run the model in version 0.9.0, which is the last version before the recent PyPSA update, the following command can be used:
