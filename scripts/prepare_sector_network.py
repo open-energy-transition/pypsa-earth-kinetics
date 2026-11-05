@@ -1547,6 +1547,27 @@ def _add_country_emission_loads(
         n.loads.loc[load_name, "subsector"] = subsector
 
 
+def _get_bus_country(n, bus):
+    """Return the country of a bus, falling back to its location bus."""
+    if pd.isna(bus) or bus == "" or bus == "co2 atmosphere":
+        return ""
+
+    if bus not in n.buses.index:
+        return ""
+
+    country = n.buses.at[bus, "country"]
+    country = "" if pd.isna(country) else str(country).strip()
+    if country:
+        return country
+
+    location = n.buses.at[bus, "location"]
+    if pd.isna(location) or location not in n.buses.index:
+        return ""
+
+    country = n.buses.at[location, "country"]
+    return "" if pd.isna(country) else str(country).strip()
+
+
 def _assign_sector_link_countries(n):
     """Assign country metadata to sector-tagged Links."""
     sector = (
@@ -1559,43 +1580,29 @@ def _assign_sector_link_countries(n):
         .str.strip()
     )
 
-    bus_cols = sorted(
-        (col for col in n.links.columns if col.startswith("bus") and col[3:].isdigit()),
-        key=lambda col: int(col[3:]),
+    bus_columns = sorted(
+        [
+            column
+            for column in n.links.columns
+            if column.startswith("bus") and column[3:].isdigit()
+        ],
+        key=lambda column: int(column[3:]),
     )
 
-    for link in n.links.index[sector.ne("")]:
-        countries = set()
-
-        for bus_col in bus_cols:
-            bus = n.links.at[link, bus_col]
-
-            if pd.isna(bus) or bus == "" or bus == "co2 atmosphere":
-                continue
-
-            if bus not in n.buses.index:
-                continue
-
-            country = n.buses.at[bus, "country"]
-            country = "" if pd.isna(country) else str(country).strip()
-
-            if not country:
-                location = n.buses.at[bus, "location"]
-
-                if not pd.isna(location) and location in n.buses.index:
-                    country = n.buses.at[location, "country"]
-                    country = "" if pd.isna(country) else str(country).strip()
-
-            if country:
-                countries.add(country)
+    for link_name in n.links.index[sector.ne("")]:
+        countries = {
+            _get_bus_country(n, n.links.at[link_name, bus_column])
+            for bus_column in bus_columns
+        }
+        countries.discard("")
 
         if len(countries) != 1:
             raise ValueError(
-                f"Could not uniquely determine country for sector Link "
-                f"'{link}': {sorted(countries)}"
+                "Could not uniquely determine country for sector Link "
+                f"'{link_name}': {sorted(countries)}"
             )
 
-        n.links.loc[link, "country"] = countries.pop()
+        n.links.at[link_name, "country"] = next(iter(countries))
 
 
 def _assign_sector_load_countries(n):
@@ -1613,39 +1620,24 @@ def _assign_sector_load_countries(n):
     if "country" not in n.loads.columns:
         n.loads["country"] = ""
 
-    for load in n.loads.index[sector.ne("")]:
-        country = n.loads.at[load, "country"]
+    for load_name in n.loads.index[sector.ne("")]:
+        country = n.loads.at[load_name, "country"]
         country = "" if pd.isna(country) else str(country).strip()
 
-        # Preserve explicitly assigned countries, e.g. aggregated CO2 emission loads.
+        # Keep explicitly assigned countries, e.g. aggregated CO2 emission loads.
         if country:
             continue
 
-        bus = n.loads.at[load, "bus"]
-
-        if pd.isna(bus) or bus == "" or bus not in n.buses.index:
-            raise ValueError(
-                f"Could not determine country for sector Load '{load}' "
-                f"from bus '{bus}'."
-            )
-
-        country = n.buses.at[bus, "country"]
-        country = "" if pd.isna(country) else str(country).strip()
-
-        if not country:
-            location = n.buses.at[bus, "location"]
-
-            if not pd.isna(location) and location in n.buses.index:
-                country = n.buses.at[location, "country"]
-                country = "" if pd.isna(country) else str(country).strip()
+        bus = n.loads.at[load_name, "bus"]
+        country = _get_bus_country(n, bus)
 
         if not country:
             raise ValueError(
-                f"Could not determine country for sector Load '{load}' "
+                f"Could not determine country for sector Load '{load_name}' "
                 f"from bus '{bus}'."
             )
 
-        n.loads.loc[load, "country"] = country
+        n.loads.at[load_name, "country"] = country
 
 
 def add_aviation(
