@@ -7,6 +7,12 @@ SPDX-License-Identifier: CC-BY-4.0
 
 This file lists the sources used for the country-specific CO2 policy CSV files in this directory.
 
+`co2_sector_limits.csv` is the default policy file referenced by the main
+configuration and is intentionally header-only, so sector-specific CO2 limits
+are disabled unless explicitly configured. `co2_sector_limits.example.csv`
+provides an example of the supported sector and subsector structure.
+
+
 | Country | CSV file | Source |
 |---|---|---|
 | Japan (JP) | `co2_sector_limits_jp_indc2015.csv` | [Japan's Intended Nationally Determined Contribution (INDC), 2015 — Ministry of the Environment](https://www.env.go.jp/en/earth/cc/2030indc.html) |
