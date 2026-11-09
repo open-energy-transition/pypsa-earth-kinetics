@@ -619,20 +619,18 @@ if config["enable"].get("retrieve_cost_data", True):
             copyfile(input[0], output[0])
 
     rule retrieve_cost_data:
-        wildcard_constraints:
-            year=r"\d{4}",
         params:
             version=config["costs"]["technology_data_version"],
         input:
             storage.http(
                 f"https://raw.githubusercontent.com/PyPSA/technology-data/{config['costs']['technology_data_version']}/outputs/{cost_directory}"
-                + "costs_{year}.csv",
+                + "costs_{planning_horizons}.csv",
                 keep_local=True,
             ),
         output:
-            "resources/" + RDIR + "costs_{year}.csv",
+            "resources/" + RDIR + "costs_{planning_horizons}.csv",
         log:
-            "logs/" + RDIR + "retrieve_cost_data_{year}.log",
+            "logs/" + RDIR + "retrieve_cost_data_{planning_horizons}.log",
         resources:
             mem_mb=5000,
         run:
@@ -641,7 +639,6 @@ if config["enable"].get("retrieve_cost_data", True):
 
 rule process_cost_data:
     wildcard_constraints:
-        year=r"\d{4}",
         scope=r"elec|sec",
     params:
         costs=config["costs"],
@@ -651,15 +648,15 @@ rule process_cost_data:
         network="networks/" + RDIR + "base.nc",
         costs=branch(
             config["enable"].get("retrieve_cost_data", True),
-            "resources/" + RDIR + "costs_{year}.csv",
+            "resources/" + RDIR + "costs_{planning_horizons}.csv",
             "data/costs.csv",
         ),
     output:
-        "resources/" + RDIR + "costs_{year}_{scope}.csv",
+        "resources/" + RDIR + "costs_{planning_horizons}_{scope}.csv",
     log:
-        "logs/" + RDIR + "build_cost_data_{year}_{scope}.log",
+        "logs/" + RDIR + "build_cost_data_{planning_horizons}_{scope}.log",
     benchmark:
-        "benchmarks/" + RDIR + "build_cost_data_{year}_{scope}"
+        "benchmarks/" + RDIR + "build_cost_data_{planning_horizons}_{scope}"
     threads: 1
     resources:
         mem_mb=4000,
@@ -1290,6 +1287,8 @@ rule solve_sector_networks:
 
 
 rule prepare_ports:
+    input:
+        ports="data/ports/UpdatedPub150.csv",
     params:
         custom_export=config["custom_data"]["export_ports"],
     output:
