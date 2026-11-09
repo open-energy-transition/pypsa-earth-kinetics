@@ -9,7 +9,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-
 STATUS_CONFIG = config.get("validation", {})
 STATUS_ENABLED = STATUS_CONFIG.get("enable", True)
 
@@ -179,22 +178,18 @@ if STATUS_ENABLED:
             touch(STATUS_ENVIRONMENT_MARKER),
         run:
             environment_prefix = Path(STATUS_ENVIRONMENT_PREFIX).resolve()
-
             if environment_prefix.exists():
                 shutil.rmtree(environment_prefix)
-
             environment_prefix.parent.mkdir(
                 parents=True,
                 exist_ok=True,
             )
-
             conda_executable = os.environ.get("CONDA_EXE") or shutil.which("conda")
             if conda_executable is None:
                 raise FileNotFoundError(
                     "Could not find the Conda executable. "
                     "Neither CONDA_EXE nor a conda executable in PATH is available."
                 )
-
             subprocess.run(
                 [
                     conda_executable,
