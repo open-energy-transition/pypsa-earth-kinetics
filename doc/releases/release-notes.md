@@ -10,6 +10,8 @@ This part of documentation collects descriptive release notes to capture the mai
 
 **New Features and Major Changes**
 
+* Update DemandCast to version 2.0.0, covering 2000–2025 with improved accuracy; `demcast` load values change by about +4% on average per country [PR #2121](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2121)
+
 * Enable support of PyPSA 1+ and improve environment [PR #1676](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1676)
 
 * Enable support of Snakemake 8+ [PR #2032](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2032)
@@ -17,6 +19,12 @@ This part of documentation collects descriptive release notes to capture the mai
 * Remove support of `pydoe2` [PR #2022](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2022)
 
 **Minor Changes and bug-fixing**
+
+* Fix positional geometry indexing in demand profiles to support GeoSeries with non-default indices [PR #2085](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2085)
+
+* Fix natura exclusion removing all land (zero solar and wind potential) with recent GDAL versions by selecting protected cells explicitly [PR #2117](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2117)
+
+* Support earth-osm v0.3.1 and introduce option to control multi-threading [PR #2095](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2095)
 
 * Fix connection cost calculations during network simplification by preserving zero-cost AC connections and correctly accounting for HVDC links and lines [PR #2091](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2091)
 
