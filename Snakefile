@@ -42,6 +42,7 @@ configfile: "configs/plotting.default.yaml"
 configfile: "configs/solving.default.yaml"
 configfile: "configs/bundle_config.yaml"
 configfile: "configs/powerplantmatching_config.yaml"
+configfile: "configs/validation_config.yaml"
 configfile: "config.yaml"
 
 
@@ -168,6 +169,9 @@ if config["custom_rules"] is not []:
         include: rule
 
 
+include: "integrations/status/status.smk"
+
+
 rule clean:
     run:
         try:
@@ -180,10 +184,11 @@ rule clean:
 
 rule solve_all_networks:
     input:
-        expand(
+        networks=expand(
             "results/" + RDIR + "networks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}.nc",
             **config["scenario"],
         ),
+        validation=electricity_status_outputs(),
 
 
 rule plot_all_p_nom:
@@ -1255,12 +1260,13 @@ rule prepare_sector_networks:
 
 rule solve_sector_networks:
     input:
-        expand(
+        networks=expand(
             RESDIR
             + "postnetworks/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{sopts}_{planning_horizons}_{discountrate}.nc",
             **config["scenario"],
             **config["costs"],
         ),
+        validation=sector_status_outputs(),
 
 
 rule prepare_ports:
