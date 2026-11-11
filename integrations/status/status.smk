@@ -55,7 +55,7 @@ def _status_run_name(validation_label):
             if path.is_dir() and match:
                 existing_runs.append(int(match.group(1)))
 
-    run_name = f"run_{max(existing_runs, default=0) + 1:03d}"
+    run_name = f"run_{max(existing_runs, default=0)+1:03d}"
     _STATUS_RUN_NAMES[validation_label] = run_name
 
     return run_name
