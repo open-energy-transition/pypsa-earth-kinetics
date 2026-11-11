@@ -47,6 +47,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        submodules: recursive
 
     - name: Use base env file if it was changed
       run: |
@@ -269,6 +271,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        submodules: recursive
 
     - uses: prefix-dev/setup-pixi@v0.11.3
       with:
