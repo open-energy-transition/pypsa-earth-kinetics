@@ -50,6 +50,7 @@ countries = list(snakemake.params.countries)
 status_environment_prefix = Path(snakemake.params.status_environment_prefix).resolve()
 
 osm_grid_path = (repo_root / snakemake.params.osm_grid_path).resolve()
+osm_network_path = (repo_root / snakemake.params.osm_network_path).resolve()
 
 
 if not status_repository.exists():
@@ -65,6 +66,8 @@ if not network_path.exists():
 for osm_file in (
     osm_grid_path / "all_clean_lines.geojson",
     osm_grid_path / "all_clean_substations.geojson",
+    osm_network_path / "all_lines_build_network.geojson",
+    osm_network_path / "all_buses_build_network.geojson",
 ):
     if not osm_file.exists():
         raise FileNotFoundError(
@@ -93,6 +96,11 @@ validation_config["countries"] = countries
 validation_config["year"] = [year]
 
 status_config["plot_osm_grid_network"]["grid_path"] = str(osm_grid_path)
+
+status_config["transmission_validation"] = {
+    "osm_lines": str(osm_network_path / "all_lines_build_network.geojson"),
+    "osm_buses": str(osm_network_path / "all_buses_build_network.geojson"),
+}
 
 
 temporary_config = None
@@ -140,6 +148,25 @@ finally:
     if temporary_config is not None:
         temporary_config.unlink(missing_ok=True)
 
+
+# Transfer the complete validation output to the KINETICS results directory.
+source_results = status_repository / "results" / validation_name
+target_results = validation_result.parents[1]
+
+if not source_results.is_dir():
+    raise FileNotFoundError(f"Status validation results not found: {source_results}")
+
+shutil.copytree(source_results, target_results, dirs_exist_ok=True)
+
+if not validation_result.is_file():
+    raise FileNotFoundError(
+        f"Expected validation figure not found: {validation_result}"
+    )
+
+# Keep the Status checkout free of completed validation outputs.
+shutil.rmtree(source_results)
+
+print(f"Validation results saved to: {target_results}")
 
 if not validation_result.exists():
     raise FileNotFoundError(

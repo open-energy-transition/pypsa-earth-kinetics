@@ -79,6 +79,7 @@ The rule :mod:`simplify_network` does up to four things:
 
 4. Optionally, if an integer were provided for the wildcard ``{simpl}`` (e.g. ``networks/elec_s500.nc``), the network is clustered to this number of clusters with the routines from the ``cluster_network`` rule with the function ``cluster_network.cluster(...)``. This step is usually skipped!
 """
+
 import sys
 from functools import reduce
 
@@ -97,13 +98,16 @@ from _helpers import (
     update_config_dictionary,
     update_p_nom_max,
 )
-from cluster_network import cluster_regions, clustering_for_n_clusters
+from cluster_network import (
+    cluster_regions,
+    clustering_for_n_clusters,
+    get_aggregate_carriers,
+)
 from pypsa.clustering.spatial import (
     aggregateoneport,
     busmap_by_stubs,
     get_clustering_from_busmap,
 )
-from pypsa.io import import_components_from_dataframe, import_series_from_dataframe
 from scipy.sparse.csgraph import connected_components, dijkstra
 
 sys.settrace
@@ -204,8 +208,8 @@ def simplify_network_to_base_voltage(
             if col.startswith("bus"):
                 df[col] = df[col].map(trafo_map)
 
-    n.mremove("Transformer", n.transformers.index)
-    n.mremove("Bus", n.buses.index.difference(trafo_map))
+    n.remove("Transformer", n.transformers.index)
+    n.remove("Bus", n.buses.index.difference(trafo_map))
 
     return n, trafo_map
 
@@ -213,18 +217,19 @@ def simplify_network_to_base_voltage(
 def _prepare_connection_costs_per_link(
     n, costs, renewable_config, hvdc_as_lines, lines_length_factor
 ):
-    if n.links.empty:
-        return {}
-
     connection_costs_per_link = {}
 
-    # initialize dc_lengths and underwater_fractions by the hvdc_as_lines option
+    # Select DC branches according to their network representation.
     if hvdc_as_lines:
-        dc_lengths = n.lines.length
-        unterwater_fractions = n.lines.underwater_fraction
+        dc_branches = n.lines.loc[n.lines.carrier == "DC"]
     else:
-        dc_lengths = n.links.length
-        unterwater_fractions = n.links.underwater_fraction
+        dc_branches = n.links.loc[n.links.carrier == "DC"]
+
+    if dc_branches.empty:
+        return connection_costs_per_link
+
+    dc_lengths = dc_branches.length
+    unterwater_fractions = dc_branches.underwater_fraction
 
     for tech in renewable_config:
         if tech.startswith("offwind"):
@@ -242,6 +247,69 @@ def _prepare_connection_costs_per_link(
     return connection_costs_per_link
 
 
+def _build_connection_cost_graph(n, connection_costs, hvdc_as_lines):
+    """Build a sparse graph preserving zero-cost AC connections."""
+    from scipy.sparse import coo_matrix
+
+    link_edges = n.links[["bus0", "bus1"]].copy()
+    line_edges = n.lines[["bus0", "bus1"]].copy()
+
+    link_edges["weight"] = 0.0
+    line_edges["weight"] = 0.0
+
+    if hvdc_as_lines:
+        dc_mask = n.lines.carrier == "DC"
+        line_edges.loc[dc_mask, "weight"] = connection_costs.reindex(
+            n.lines.index[dc_mask]
+        )
+    else:
+        dc_mask = n.links.carrier == "DC"
+        link_edges.loc[dc_mask, "weight"] = connection_costs.reindex(
+            n.links.index[dc_mask]
+        )
+
+    edges = pd.concat([link_edges, line_edges], ignore_index=True)
+
+    if not np.isfinite(edges["weight"].to_numpy(dtype=float)).all():
+        invalid = edges.loc[~np.isfinite(edges["weight"].to_numpy(dtype=float))]
+        raise ValueError(
+            "Connection graph contains non-finite edge weights:\n"
+            + invalid.head(20).to_string()
+            + f"\nTotal invalid edges: {len(invalid)}"
+        )
+
+    if (edges["weight"] < 0).any():
+        raise ValueError("Connection graph contains negative edge weights.")
+
+    bus_indices = pd.Series(np.arange(len(n.buses)), index=n.buses.index)
+    edges["i"] = edges["bus0"].map(bus_indices)
+    edges["j"] = edges["bus1"].map(bus_indices)
+
+    if edges[["i", "j"]].isna().any().any():
+        raise ValueError("Connection graph references unknown buses.")
+
+    i = edges["i"].to_numpy(dtype=int)
+    j = edges["j"].to_numpy(dtype=int)
+
+    edges["i"] = np.minimum(i, j)
+    edges["j"] = np.maximum(i, j)
+
+    edges = edges.groupby(["i", "j"], as_index=False)["weight"].min()
+
+    graph = coo_matrix(
+        (
+            edges["weight"].to_numpy(dtype=float),
+            (
+                edges["i"].to_numpy(dtype=int),
+                edges["j"].to_numpy(dtype=int),
+            ),
+        ),
+        shape=(len(n.buses), len(n.buses)),
+    )
+
+    return graph.tocsr()
+
+
 def _compute_connection_costs_to_bus(
     n,
     busmap,
@@ -249,13 +317,12 @@ def _compute_connection_costs_to_bus(
     renewable_config,
     hvdc_as_lines,
     lines_length_factor,
-    connection_costs_per_link=None,
     buses=None,
 ):
-    if connection_costs_per_link is None:
-        connection_costs_per_link = _prepare_connection_costs_per_link(
-            n, costs, renewable_config, hvdc_as_lines, lines_length_factor
-        )
+    # Recompute costs after topology changes.
+    connection_costs_per_link = _prepare_connection_costs_per_link(
+        n, costs, renewable_config, hvdc_as_lines, lines_length_factor
+    )
 
     if buses is None:
         buses = busmap.index[busmap.index != busmap.values]
@@ -263,22 +330,33 @@ def _compute_connection_costs_to_bus(
     connection_costs_to_bus = pd.DataFrame(index=buses)
 
     for tech in connection_costs_per_link:
-        adj = n.adjacency_matrix(
-            weights=pd.concat(
-                dict(
-                    Link=connection_costs_per_link[tech]
-                    .reindex(n.links.index)
-                    .astype(float),
-                    Line=pd.Series(0.0, n.lines.index),
-                )
-            )
+        adj = _build_connection_cost_graph(
+            n,
+            connection_costs_per_link[tech],
+            hvdc_as_lines,
         )
+        source_indices = n.buses.index.get_indexer(buses)
+        target_indices = n.buses.index.get_indexer(busmap.loc[buses])
+
+        if (source_indices < 0).any() or (target_indices < 0).any():
+            raise ValueError("Connection cost busmap references unknown buses.")
+
         costs_between_buses = dijkstra(
-            adj, directed=False, indices=n.buses.index.get_indexer(buses)
+            adj,
+            directed=False,
+            indices=source_indices,
         )
+
         connection_costs_to_bus[tech] = costs_between_buses[
-            np.arange(len(buses)), n.buses.index.get_indexer(busmap.loc[buses])
+            np.arange(len(buses)), target_indices
         ]
+
+        unreachable = ~np.isfinite(connection_costs_to_bus[tech])
+        if unreachable.any():
+            raise ValueError(
+                f"Unreachable bus mappings for {tech}: "
+                f"{busmap.loc[buses[unreachable]].to_dict()}"
+            )
     return connection_costs_to_bus
 
 
@@ -343,12 +421,12 @@ def _aggregate_and_move_components(
     """
 
     def replace_components(n, c, df, pnl):
-        n.mremove(c, n.df(c).index)
+        n.remove(c, n.df(c).index)
 
-        import_components_from_dataframe(n, df, c)
+        n.add(c, df.index, **df)
         for attr, df in pnl.items():
             if not df.empty:
-                import_series_from_dataframe(n, df, c, attr)
+                n._import_series_from_df(df, c, attr)
 
     _adjust_capital_costs_using_connection_costs(
         n,
@@ -360,7 +438,7 @@ def _aggregate_and_move_components(
     generator_strategies = aggregation_strategies["generators"]
     one_port_strategies = aggregation_strategies["one_ports"]
 
-    carriers = set(n.generators.carrier) - set(exclude_carriers)
+    carriers = get_aggregate_carriers(n, exclude_carriers)
     generators, generators_pnl = aggregateoneport(
         n,
         busmap,
@@ -382,23 +460,24 @@ def _aggregate_and_move_components(
         replace_components(n, one_port, df, pnl)
 
     buses_to_del = n.buses.index.difference(busmap)
-    n.mremove("Bus", buses_to_del)
+    n.remove("Bus", buses_to_del)
     for c in n.branch_components:
         df = n.df(c)
-        n.mremove(c, df.index[df.bus0.isin(buses_to_del) | df.bus1.isin(buses_to_del)])
+        n.remove(c, df.index[df.bus0.isin(buses_to_del) | df.bus1.isin(buses_to_del)])
 
 
 # Filter AC lines to avoid mixing with DC part when processing links
-def contains_ac(ls):
+def contains_ac(n, ls):
     def is_ac_branch(x):
         if x[0] == "Link":
             return n.links.loc[x[1]].dc != True
         elif x[0] == "Line":
             return n.lines.loc[x[1]].dc != True
         else:
-            logger.error("Unknown branch type for the instance {x}")
+            logger.error(f"Unknown branch type for the instance {x}")
+            return False
 
-    return any(list(map(lambda x: is_ac_branch(x), ls)))
+    return any(is_ac_branch(x) for x in ls)
 
 
 def simplify_links(
@@ -485,7 +564,7 @@ def simplify_links(
             for m, ls in G.adj[u].items():
                 # AC lines can be captured in case of complicated network topologies
                 # even despite using `nodes` defined by links
-                if m not in nodes or m in seen or contains_ac(ls):
+                if m not in nodes or m in seen or contains_ac(n, ls):
                     continue
 
                 buses = [u, m]
@@ -495,7 +574,7 @@ def simplify_links(
                     seen.add(m)
                     for m2, ls2 in G.adj[m].items():
                         # there may be AC lines which connect ends of DC chains
-                        if m2 in seen or m2 == u or contains_ac(ls2):
+                        if m2 in seen or m2 == u or contains_ac(n, ls2):
                             continue
                         buses.append(m2)
                         links.append(list(ls2))  # [name for name in ls])
@@ -535,8 +614,7 @@ def simplify_links(
                 costs,
                 renewable_config,
                 hvdc_as_lines,
-                config_lines,
-                connection_costs_per_link,
+                config_lines["length_factor"],
                 buses,
             )
 
@@ -593,8 +671,8 @@ def simplify_links(
                 )
             )
 
-            n.mremove("Link", all_links)
-            n.mremove("Line", all_dc_lines)
+            n.remove("Link", all_links)
+            n.remove("Line", all_dc_lines)
 
             static_attrs = n.components["Link"]["attrs"].loc[lambda df: df.static]
             for attr, default in static_attrs.default.items():
@@ -727,7 +805,7 @@ def aggregate_to_substations(n, aggregation_strategies=dict(), buses_i=None):
         one_port_strategies=one_port_strategies,
         scale_link_capital_costs=False,
     )
-    return clustering.network, busmap
+    return clustering.n, busmap
 
 
 def cluster(
@@ -790,7 +868,7 @@ def cluster(
         focus_weights=focus_weights,
     )
 
-    return clustering.network, clustering.busmap
+    return clustering.n, clustering.busmap
 
 
 def drop_isolated_networks(n, threshold):
@@ -817,7 +895,12 @@ def drop_isolated_networks(n, threshold):
     load_mean_origin = n.loads_t.p_set.mean().mean()
 
     # duplicated sub-networks mean that there is at least one interconnection between buses
-    p_by_node = n.loads_t.p_set.mean().reindex(n.buses.index, fill_value=0.0)
+    p_by_node = (
+        n.loads_t.p_set.mean()
+        .groupby(n.loads.bus)
+        .sum()
+        .reindex(n.buses.index, fill_value=0.0)
+    )
     p_by_sub = p_by_node.groupby(p_by_node.index.map(n.buses.sub_network)).sum()
 
     small_subs = p_by_sub[p_by_sub < threshold].index
@@ -848,11 +931,11 @@ def drop_isolated_networks(n, threshold):
         n.lines.bus0.isin(i_islands) | n.lines.bus1.isin(i_islands)
     ].index
 
-    n.mremove("Bus", i_islands)
-    n.mremove("Load", i_loads_drop)
-    n.mremove("Generator", i_generators_drop)
-    n.mremove("Link", i_links_drop)
-    n.mremove("Line", i_lines_drop)
+    n.remove("Bus", i_islands)
+    n.remove("Load", i_loads_drop)
+    n.remove("Generator", i_generators_drop)
+    n.remove("Link", i_links_drop)
+    n.remove("Line", i_lines_drop)
 
     n.determine_network_topology()
 
@@ -871,7 +954,8 @@ def transform_to_gdf(n, network_crs):
     buses_df["bus_id"] = buses_df.index
 
     # load data are crucial to deal with sub-networks
-    buses_df = buses_df.join(n.loads_t.p_set.sum().T.rename("load"))
+    load_by_bus = n.loads_t.p_set.sum().groupby(n.loads.bus).sum()
+    buses_df["load"] = load_by_bus.reindex(buses_df.index, fill_value=0.0)
     buses_df["load_in_subnetw"] = buses_df.groupby(["country", "sub_network"])[
         "load"
     ].transform("sum")
@@ -953,7 +1037,7 @@ def merge_into_network(n, threshold, aggregation_strategies=dict()):
     nearest_bus_df = n.buses.loc[n.buses.index.isin(gdf_map.bus_id_right)]
 
     i_lines_islands = n.lines.loc[n.lines.bus1.isin(gdf_islands.index)].index
-    n.mremove("Line", i_lines_islands)
+    n.remove("Line", i_lines_islands)
 
     isolated_buses_mapping = (
         gdf_map[["bus_id_right"]].droplevel("country").to_dict()["bus_id_right"]
@@ -996,7 +1080,7 @@ def merge_into_network(n, threshold, aggregation_strategies=dict()):
         f"Fetched {len(gdf_islands)} isolated buses into the network. Load attached to a single bus with discrepancies of {(100 * ((load_mean_final - load_mean_origin)/load_mean_origin)):2.1E}% and {(100 * ((generators_mean_final - generators_mean_origin)/generators_mean_origin)):2.1E}% for load and generation capacity, respectively"
     )
 
-    return clustering.network, busmap
+    return clustering.n, busmap
 
 
 def merge_isolated_networks(n, threshold, aggregation_strategies=dict()):
@@ -1025,7 +1109,12 @@ def merge_isolated_networks(n, threshold, aggregation_strategies=dict()):
 
     n.determine_network_topology()
 
-    p_by_node = n.loads_t.p_set.mean().reindex(n.buses.index, fill_value=0.0)
+    p_by_node = (
+        n.loads_t.p_set.mean()
+        .groupby(n.loads.bus)
+        .sum()
+        .reindex(n.buses.index, fill_value=0.0)
+    )
     p_by_sub = p_by_node.groupby(p_by_node.index.map(n.buses.sub_network)).sum()
 
     small_subs = p_by_sub[p_by_sub < threshold].index
@@ -1084,7 +1173,7 @@ def merge_isolated_networks(n, threshold, aggregation_strategies=dict()):
         f"Merged {len(i_islands_merge)} buses. Load attached to a single bus with discrepancies of {(100 * ((load_mean_final - load_mean_origin)/load_mean_origin)):2.1E}% and {(100 * ((generators_mean_final - generators_mean_origin)/generators_mean_origin)):2.1E}% for load and generation capacity, respectively"
     )
 
-    return clustering.network, busmap
+    return clustering.n, busmap
 
 
 if __name__ == "__main__":
