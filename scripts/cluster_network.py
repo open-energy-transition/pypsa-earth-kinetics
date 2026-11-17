@@ -122,6 +122,7 @@ Exemplary unsolved network clustered to 37 nodes:
 """
 
 import logging
+from collections.abc import Iterable
 from functools import reduce
 
 import geopandas as gpd
@@ -134,6 +135,7 @@ from _helpers import (
     add_year_suffix_to_carriers,
     configure_logging,
     create_logger,
+    get_aggregate_carriers,
     get_base_carrier,
     locate_bus,
     nearest_shape,
@@ -158,22 +160,6 @@ logger = create_logger(__name__)
 
 def normed(x):
     return (x / x.sum()).fillna(0.0)
-
-
-def get_aggregate_carriers(network, exclude_carriers):
-    """
-    Return carrier variants that should be aggregated.
-
-    Exclusions are matched against the base carrier so that, for example,
-    excluding ``coal`` also excludes internally year-tagged carriers such as
-    ``coal-2020``.
-    """
-    exclude_carriers = set(exclude_carriers)
-    return {
-        carrier
-        for carrier in network.generators.carrier.unique()
-        if get_base_carrier(carrier) not in exclude_carriers
-    }
 
 
 def weighting_for_country(n, x):
@@ -639,7 +625,7 @@ def replace_components(n, c, df, pnl):
 def groupby_bus_carrier(
     network: pypsa.Network,
     aggregation_strategies: dict,
-    exclude_carriers: list = [],
+    exclude_carriers: Iterable[str] = (),
 ) -> None:
     """
     Group generators and storage units by (bus, carrier).
