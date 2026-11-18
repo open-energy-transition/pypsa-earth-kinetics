@@ -9,7 +9,6 @@ import shutil
 import subprocess
 from pathlib import Path
 
-
 STATUS_CONFIG = config.get("validation", {})
 STATUS_ENABLED = STATUS_CONFIG.get("enable", True)
 
@@ -17,6 +16,8 @@ STATUS_REPOSITORY = STATUS_CONFIG.get(
     "status_repository",
     "submodules/pypsa-earth-status",
 )
+
+STATUS_RESULTS_ROOT = (Path("results") / RDIR / "validation").as_posix()
 
 STATUS_REFERENCE_YEAR = int(STATUS_CONFIG.get("reference_year", 2023))
 
@@ -44,7 +45,7 @@ def _status_run_name(validation_label):
     if validation_label in _STATUS_RUN_NAMES:
         return _STATUS_RUN_NAMES[validation_label]
 
-    validation_root = Path(STATUS_REPOSITORY) / "results" / validation_label
+    validation_root = Path(STATUS_RESULTS_ROOT) / validation_label
 
     existing_runs = []
 
@@ -127,8 +128,8 @@ def electricity_status_outputs():
         return []
 
     return expand(
-        STATUS_REPOSITORY
-        + "/results/{validation_label}/{run_name}/"
+        STATUS_RESULTS_ROOT
+        + "/{validation_label}/{run_name}/"
         + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}/"
         + "figures/grid_network.png",
         validation_label=[STATUS_ELECTRICITY_LABEL],
@@ -155,8 +156,8 @@ def sector_status_outputs():
 
         outputs.extend(
             expand(
-                STATUS_REPOSITORY
-                + "/results/{validation_label}/{run_name}/"
+                STATUS_RESULTS_ROOT
+                + "/{validation_label}/{run_name}/"
                 + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_"
                 + "{sopts}_{planning_horizons}_{discountrate}/"
                 + "figures/grid_network.png",
@@ -179,22 +180,18 @@ if STATUS_ENABLED:
             touch(STATUS_ENVIRONMENT_MARKER),
         run:
             environment_prefix = Path(STATUS_ENVIRONMENT_PREFIX).resolve()
-
             if environment_prefix.exists():
                 shutil.rmtree(environment_prefix)
-
             environment_prefix.parent.mkdir(
                 parents=True,
                 exist_ok=True,
             )
-
             conda_executable = os.environ.get("CONDA_EXE") or shutil.which("conda")
             if conda_executable is None:
                 raise FileNotFoundError(
                     "Could not find the Conda executable. "
                     "Neither CONDA_EXE nor a conda executable in PATH is available."
                 )
-
             subprocess.run(
                 [
                     conda_executable,
@@ -219,8 +216,8 @@ if STATUS_ENABLED:
             status_environment=STATUS_ENVIRONMENT_MARKER,
         output:
             validation_result=(
-                STATUS_REPOSITORY
-                + "/results/{validation_label}/{run_name}/"
+                STATUS_RESULTS_ROOT
+                + "/{validation_label}/{run_name}/"
                 + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}/"
                 + "figures/grid_network.png"
             ),
@@ -236,6 +233,7 @@ if STATUS_ENABLED:
             ),
             scenario_key=_electricity_scenario_key,
             osm_grid_path="resources/" + RDIR + "osm/clean",
+            osm_network_path="resources/" + RDIR + "base_network",
         log:
             (
                 "logs/"
@@ -260,8 +258,8 @@ if STATUS_ENABLED:
             status_environment=STATUS_ENVIRONMENT_MARKER,
         output:
             validation_result=(
-                STATUS_REPOSITORY
-                + "/results/{validation_label}/{run_name}/"
+                STATUS_RESULTS_ROOT
+                + "/{validation_label}/{run_name}/"
                 + "elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_"
                 + "{sopts}_{planning_horizons}_{discountrate}/"
                 + "figures/grid_network.png"
@@ -278,6 +276,7 @@ if STATUS_ENABLED:
             ),
             scenario_key=_sector_scenario_key,
             osm_grid_path="resources/" + RDIR + "osm/clean",
+            osm_network_path="resources/" + RDIR + "base_network",
         log:
             (
                 "logs/"
