@@ -10,6 +10,8 @@ This part of documentation collects descriptive release notes to capture the mai
 
 **New Features and Major Changes**
 
+* Add country-, sector-, and subsector-specific CO2 emission limits for sector-coupled models [PR #2100](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2100)
+
 * Update DemandCast to version 2.0.0, covering 2000–2025 with improved accuracy; `demcast` load values change by about +4% on average per country [PR #2121](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2121)
 
 * Enable support of PyPSA 1+ and improve environment [PR #1676](https://github.com/pypsa-meets-earth/pypsa-earth/pull/1676)
