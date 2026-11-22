@@ -286,16 +286,21 @@ def add_carrier_buses(n: pypsa.Network, carrier: str, nodes: list = None) -> Non
         nodes = vars(spatial)[carrier].nodes
     location = vars(spatial)[carrier].locations
 
-    # skip if carrier already exists
-    if carrier in n.carriers.index:
-        return
-
     if not isinstance(nodes, pd.Index):
         nodes = pd.Index(nodes)
 
-    n.add("Carrier", carrier, co2_emissions=costs.at[carrier, "CO2 intensity"])
+    if carrier not in n.carriers.index:
+        n.add("Carrier", carrier, co2_emissions=costs.at[carrier, "CO2 intensity"])
 
-    n.add("Bus", nodes, location=location, carrier=carrier)
+    missing_nodes = nodes.difference(n.buses.index)
+    if missing_nodes.empty:
+        return
+
+    locations = pd.Series(location, index=nodes).loc[missing_nodes]
+
+    n.add("Bus", missing_nodes, location=locations, carrier=carrier)
+
+    nodes = missing_nodes
 
     n.add(
         "Store",
@@ -2308,25 +2313,70 @@ def add_industry(
             subsector=normalized_subsector,
         )
 
+    #################################################### CARRIER = COAL
+
+    # Ensure coal supply exists even without coal-fired power plants.
+    add_carrier_buses(n, "coal")
+
+    # Coal combustion emissions are explicitly represented by Links.
+    n.carriers.loc["coal", "co2_emissions"] = 0.0
+
     coal_demand_by_subsector = industrial_demand_by_subsector["coal"].loc[spatial.nodes]
 
-    for subsector in coal_demand_by_subsector.columns:
-        demand = coal_demand_by_subsector[subsector]
+    if options["coal"]["spatial_coal"]:
+        coal_supply_buses = pd.Series(
+            spatial.coal.nodes,
+            index=spatial.nodes,
+        )
+    else:
+        coal_supply_buses = pd.Series(
+            spatial.coal.nodes[0],
+            index=spatial.nodes,
+        )
 
-        if demand.fillna(0.0).eq(0.0).all():
+    for subsector in coal_demand_by_subsector.columns:
+        demand = coal_demand_by_subsector[subsector].fillna(0.0)
+
+        if demand.eq(0.0).all():
             continue
 
         normalized_subsector = _normalize_industry_subsector(subsector)
-        co2_by_node = demand * costs.at["coal", "CO2 intensity"] / 8760
+        active_nodes = demand.index[demand.ne(0.0)]
 
-        _add_country_emission_loads(
-            n,
-            co2_by_node,
-            name=f"industry coal emissions {normalized_subsector}",
-            carrier="industry coal emissions",
-            sector="industry",
-            subsector=normalized_subsector,
+        industry_buses = active_nodes + f" coal for industry {normalized_subsector}"
+
+        n.add(
+            "Bus",
+            industry_buses,
+            location=active_nodes,
+            carrier="coal for industry",
         )
+
+        n.add(
+            "Load",
+            industry_buses,
+            bus=industry_buses,
+            carrier="coal for industry",
+            p_set=demand.loc[active_nodes].to_numpy() / 8760,
+        )
+
+        n.add(
+            "Link",
+            industry_buses,
+            bus0=coal_supply_buses.loc[active_nodes].to_numpy(),
+            bus1=industry_buses,
+            bus2="co2 atmosphere",
+            carrier="coal for industry",
+            p_nom_extendable=True,
+            efficiency=1.0,
+            efficiency2=costs.at["coal", "CO2 intensity"],
+        )
+
+        n.links.loc[industry_buses, "country"] = _country_for_nodes(
+            n, active_nodes
+        ).to_numpy()
+        n.links.loc[industry_buses, "sector"] = "industry"
+        n.links.loc[industry_buses, "subsector"] = normalized_subsector
 
     ########################################################### CARRIER = HEAT
     # TODO simplify bus expression
