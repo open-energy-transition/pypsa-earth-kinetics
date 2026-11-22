@@ -64,3 +64,28 @@ the solver raises an error if such a component is covered by an active policy.
 | Japan (JP) | `co2_sector_limits_jp_gw_plan2025_conservative.csv` | [Japan's Global Warming Countermeasures Plan, 2025 — Ministry of the Environment](https://www.env.go.jp/content/000338678.pdf) |
 | Japan (JP) | `co2_sector_limits_jp_gw_plan2025_ambitious.csv` | [Japan's Global Warming Countermeasures Plan, 2025 — Ministry of the Environment](https://www.env.go.jp/content/000338678.pdf) |
 | Japan (JP) | `co2_sector_limits_jp_iea_emissions.csv` | [Japan: Emissions — International Energy Agency (IEA)](https://www.iea.org/countries/japan/emissions) |
+
+## Japan agriculture emissions accounting
+
+The IEA 2023 agriculture reference is 7,263,900 tCO2/year,
+whereas the Japan sector model produces approximately
+12.63 MtCO2/year from UNSD-based agriculture, forestry and
+fishing fuel consumption using the 2019 base year.
+
+The discrepancy may reflect differences in reference years
+and sectoral accounting boundaries, which have not yet been
+reconciled.
+
+The agriculture-specific constraint is therefore disabled
+(`inf`) in the IEA 2023 policy CSV.
+
+The original IEA value is preserved in the optional `notes`
+column. This column is informational and ignored by the solver.
+
+The other Japan policy datasets originally specified `inf`
+for agriculture. Their notes retain this original value and
+include the IEA 2023 figure for historical reference only,
+not as a 2030 or 2040 target.
+
+Agricultural fuel consumption and associated CO2 emissions
+remain included in the model and national CO2 accounting.
