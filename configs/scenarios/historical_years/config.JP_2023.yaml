@@ -351,10 +351,27 @@ sector:
   transport_fuel_cell_efficiency: 0.5
   transport_internal_combustion_efficiency: 0.3
 
-  land_transport_fuel_cell_share: # 1 means all FCEVs HERE
-    AB_2023: 0.0
-  land_transport_electric_share: # 1 means all EVs  # This leads to problems when non-zero HERE
-    AB_2023: 0.0
+  # Japan road transport electrification parameters
+  #
+  # Electrification shares: BEV: 228977; PHEV: 207578; FCEV: 7310 (stock at 31 March 2023)
+  # NeV, EV Ownership Statistics FY2022, 2023, https://www.cev-pc.or.jp/tokei/hoyuudaisu.html (Accessed 24 Nov 2026)
+  #
+  # Total road vehicle stock: 78394000
+  # The Japan Automobile Tyre Manufacturers Association (JATMA), Tyre Industry of Japan (Table 14. Automobile registrations and sales of replacement tyres in 2023), 2023, https://www.jatma.or.jp/docs/publications/tyre_industry_2024.pdf (Accessed 24 Nov 2026)
+  #
+  # PHEV electric-driving utility factor: Utility factor: 0.50
+  # Mizuho, Commissioned research project for demonstration and support initiatives related to CASE (Connected, Autonomous, Shared, Electric) vehicles, including unmanned autonomous driving FY2022 report, 2023, https://www.meti.go.jp/meti_lib/report/2022FY/000302.pdf (Accessed 24 Nov 2026)
+  #
+  # Share calculation:
+  # Electric share = (BEV stock + PHEV stock * PHEV electric-driving utility factor) / Total road vehicle stock
+  #                = (228977 + 207578 * 0.50) / 78394000 = 0.004245
+  # Fuel-cell share = FCEV stock / total road vehicle stock
+  #                 = 7310 / 78394000 = 0.000093
+  #
+  land_transport_fuel_cell_share:  # 1 means all FCEVs HERE
+    AB_2023: 9.300e-05
+  land_transport_electric_share:  # 1 means all EVs  # This leads to problems when non-zero HERE
+    AB_2023: 4.245e-3
 
   # ------------------- Biomass sector -------------------
   biomass_transport: true # biomass transport between nodes
