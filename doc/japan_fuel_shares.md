@@ -79,7 +79,8 @@ Space heating share of fossil-fuel thermal consumption:
     = 0.4136
 
 Electricity is excluded from this last calculation because
-existing electric heating is handled separately in the model.
+this calculation targets fossil-fuel heating only. Existing
+electric heating is not yet explicitly accounted for.
 
 ## Values
 
@@ -118,6 +119,15 @@ non-heating consumption.
 The Japan-specific heating shares change the end-use allocation
 without changing the total consumption of each fuel.
 
+## Network-level check
+
+The 2023 pre-network was rebuilt with 100 clusters and
+three-hour resolution. Explicit annual heat demand decreased
+from 35.071 to 2.312 TWh after removing exogenous oil switching.
+
+This confirms the removal of artificial heat demand, but does
+not establish the correctness of total useful heat demand.
+
 ## Limitations
 
 - Source values are rounded and the derived shares are approximate.
@@ -130,5 +140,5 @@ without changing the total consumption of each fuel.
 - Existing electric heating and its conversion to useful heat
   require further investigation.
 - District heating shares have not yet been calibrated for Japan.
-- Validation of the revised shares currently covers demand
-  preprocessing, not a solved network.
+- Validation covers demand preprocessing and the 2023 annual
+  pre-network, but not optimization with the revised shares.
