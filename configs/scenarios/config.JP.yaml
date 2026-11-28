@@ -162,8 +162,10 @@ co2:
 # ------------------- Sector-coupled demand data -------------------
 demand_data:
   scenario: "AB" # single demand-scenario label (formerly the {demand} wildcard; not a list)
-  update_data: true # if true, the workflow downloads the energy balances data saved in data/demand/unsd/data again. Turn on for the first run.
-  base_year: 2019
+  update_data: true # Refresh UNSD data when retrieval runs. If false, reuse existing cached data.
+  unsd_source: "sdmx" # Options: "legacy", "sdmx".
+  unsd_max_year_gap: 0 # Require exact base-year observations.
+  base_year: 2023
   other_industries: false # Whether or not to include industries that are not specified. some countries have has exaggerated numbers, check carefully.
   aluminium_year: 2019 # Year of the aluminium demand data specified in `data/AL_production.csv`
 
@@ -340,10 +342,28 @@ sector:
   transport_fuel_cell_efficiency: 0.5
   transport_internal_combustion_efficiency: 0.3
 
+  # Japan road transport electrification parameters
+  #
+  # Electrification shares: BEV: 5.9%; PHEV: 5.9%
+  # Accenture, Survey of Domestic Technology Trends in Light of Industrial Structural Changes Caused by CASE and Related Technologies, FY2021 report, 2022, p. 50, https://www.meti.go.jp/meti_lib/report/2021FY/050113.pdf (Accessed 24 Nov 2026)
+  #
+  # PHEV electric-driving utility factor: 0.50
+  # Mizuho, Commissioned research project for demonstration and support initiatives related to CASE (Connected, Autonomous, Shared, Electric) vehicles, including unmanned autonomous driving FY2022 report, 2023, https://www.meti.go.jp/meti_lib/report/2022FY/000302.pdf (Accessed 24 Nov 2026)
+  #
+  # Fuel-cell share = Historical FCEV stock share retained as a provisional assumption (see `configs/historical_years/config.JP_2023.yaml`)
+  #
+  # Share calculation:
+  # Electric share = BEV stock share + PHEV stock share * PHEV electric-driving utility factor
+  #                = 0.059 + 0.059 * 0.50 = 0.088500
+  #
+  # Assumptions:
+  # - Equal annual mileage is assumed across vehicle technologies.
+  # - The selected BEV/PHEV projections cover passenger vehicles, not all road vehicles.
+
   land_transport_fuel_cell_share: # 1 means all FCEVs HERE
-    AB_2030: 0.0
+    AB_2030: 9.300e-05
   land_transport_electric_share: # 1 means all EVs  # This leads to problems when non-zero HERE
-    AB_2030: 0.0
+    AB_2030: 8.850e-02
 
   # ------------------- Biomass sector -------------------
   biomass_transport: true # biomass transport between nodes

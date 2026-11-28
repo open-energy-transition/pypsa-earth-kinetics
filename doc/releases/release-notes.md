@@ -22,6 +22,12 @@ This part of documentation collects descriptive release notes to capture the mai
 
 **Minor Changes and bug-fixing**
 
+* Add UNSD SDMX API support for sectoral energy demand [PR #2160](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2160)
+
+* Prevent double counting of non-electric rail energy in road transport demand profiles [PR #2145](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2145)
+
+* Fix road transport energy-to-service conversion using configured technology efficiencies and scenario-specific vehicle shares [PR #2146](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2146)
+
 * Fix industrial coal accounting by explicitly representing coal consumption through fuel-specific Loads and Links [PR #2139](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2139)
 
 * Ignore query strings like `?download=1` when building the file name of `direct` and `post` databundle downloads [PR #2122](https://github.com/pypsa-meets-earth/pypsa-earth/pull/2122)
